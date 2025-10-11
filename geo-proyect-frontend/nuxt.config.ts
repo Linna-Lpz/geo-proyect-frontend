@@ -9,13 +9,14 @@ export default defineNuxtConfig({
       apiBase: string;
     }
   },
-  compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
+  compatibilityDate: '2025-05-15',
   postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-    },
+      plugins: {
+        tailwindcss: {},
+        autoprefixer: {},
+      },
   },
+  components: true,
+  devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt']
 })
