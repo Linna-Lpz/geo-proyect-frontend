@@ -1,6 +1,6 @@
 <template>
   <div class="w-full mb-4">
-    <div class="relative max-w-2xl">
+    <div class="relative">
       <input
         v-model="searchQuery"
         @keyup.enter="searchAddress"

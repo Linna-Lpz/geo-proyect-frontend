@@ -5,7 +5,7 @@ import { ref } from 'vue'
 const mapRef = ref<any>(null)
 
 // Lista de propiedades (vacía inicialmente - aquí irán tus datos reales)
-const propiedades = ref<any[]>([])
+const propertiesLocation = ref<any[]>([])
 
 // BBox que restringe el paneo a Ñuñoa, Santiago, Estación Central y La Reina
 const maxBounds: [[number, number], [number, number]] = [
@@ -89,31 +89,98 @@ function handleSearchSelect(data: { lat: number; lng: number; displayName: strin
 </script>
 
 <template>
-  <div class="grid grid-cols-12 gap-4 h-screen pt-4 px-4 pb-4">
-    <!-- C3: Columna izquierda, barra de búsqueda + mapa -->
-    <div class="col-span-12 lg:col-span-6 flex flex-col">
+  <div class="flex flex-col gap-4 pt-4 px-4 pb-4">
+    <!-- Barra de búsqueda + opciones de búsqueda -->
+    <div class="flex flex-row items-center mr-4 mb-4 mt-2 gap-4">
       <!-- Barra de búsqueda -->
-      <SearchBar @select="handleSearchSelect" />
-      
-      <!-- Mapa -->
-      <div class="w-full flex-1">
-        <ClientOnly>
-          <Map
-            ref="mapRef"
-            :items="propiedades"
-            :fit-to-items="true"
-            :max-bounds="maxBounds"
-            zoom-control-position="bottomleft"
-            :boundary-geojson="boundaryGeojson"
-            @select="onSelect"
-          />
-        </ClientOnly>
+      <div class="w-1/2 items-center">
+        <SearchBar @select="handleSearchSelect" />
       </div>
+
+      <!-- Opciones de búsqueda -->
+      <OptionBox
+          option-label="Supermercados"
+          :options="[
+            { text: 'A menos de 500 m' },
+            { text: 'A menos de 1 km' },
+            { text: 'A menos de 2 km' }
+          ]"
+          option-icon="pi pi-shopping-cart"
+      />
+      <OptionBox
+          option-label="Colegios"
+          :options="[
+            { text: 'A menos de 500 m' },
+            { text: 'A menos de 1 km' },
+            { text: 'A menos de 2 km' }
+          ]"
+          option-icon="pi pi-graduation-cap"
+      />
+      <OptionBox
+          option-label="Áreas verdes"
+          :options="[
+            { text: 'A menos de 500 m' },
+            { text: 'A menos de 1 km' },
+            { text: 'A menos de 2 km' }
+          ]"
+          option-icon="pi pi-image"
+      />
+
+      <button
+      class="px-6 py-[13px] p-3 mb-[13px] border bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 items-center shadow-md"
+      >
+        Buscar
+      </button>
     </div>
 
-    <!-- C2: derecha (listado de propiedades) -->
-    <div class="col-span-12 lg:col-span-6 overflow-y-auto">
-      <!-- tu lista de tarjetas -->
+    <!-- Mapa y listado de viviendas -->
+    <div class="flex flex-row h-screen">
+        <!-- Mapa -->
+        <div class="w-1/2 mr-4">
+          <ClientOnly>
+            <Map
+                ref="mapRef"
+                :items="propertiesLocation"
+                :fit-to-items="true"
+                :max-bounds="maxBounds"
+                zoom-control-position="bottomleft"
+                :boundary-geojson="boundaryGeojson"
+                @select="onSelect"
+            />
+          </ClientOnly>
+        </div>
+
+      <!-- Listado de viviendas -->
+      <div class="flex flex-col w-1/2 gap-4">
+        <PropertyBox
+            v-for="(property, idx) in properties"
+            :key="idx"
+            v-bind="property"
+        />
+      </div>
     </div>
   </div>
 </template>
+
+
+<script lang="ts">
+
+const properties = [
+  {
+    propertyImage: 'casa1.jpg',
+    propertyTittle: 'Casa Moderna',
+    propertyAddress: 'Calle Falsa 123',
+    propertyCommune: 'Santiago',
+    propertyPrice: '250000',
+    propertyDescription: 'Una casa moderna en el centro.'
+  },
+  {
+    propertyImage: 'departamento1.jpg',
+    propertyTittle: 'Departamento Acogedor',
+    propertyAddress: 'Avenida Siempre Viva 456',
+    propertyCommune: 'Ñuñoa',
+    propertyPrice: '180000',
+    propertyDescription: 'Departamento cerca de la naturaleza.'
+  }
+]
+</script>
