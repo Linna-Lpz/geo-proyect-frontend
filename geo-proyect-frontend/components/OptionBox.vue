@@ -12,6 +12,7 @@
         v-if="isOpen"
         class="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
     >
+      <!-- Opciones del dropdown -->
       <ul>
         <li
             v-for="(option, idx) in options"

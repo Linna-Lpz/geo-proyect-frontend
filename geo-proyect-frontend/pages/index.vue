@@ -1,3 +1,77 @@
+<template>
+  <div class="flex flex-col gap-4 pt-4 px-4 pb-4">
+    <!-- Barra de búsqueda + opciones de búsqueda -->
+    <div class="flex flex-row items-center mr-4 mb-4 mt-2 gap-4">
+      <!-- Barra de búsqueda -->
+      <div class="w-1/2 items-center">
+        <SearchBar @select="handleSearchSelect" />
+      </div>
+
+      <!-- Opciones de búsqueda -->
+      <OptionBox
+          option-label="Supermercados"
+          :options="[
+            { text: 'A menos de 500 m' },
+            { text: 'A menos de 1 km' },
+            { text: 'A menos de 2 km' }
+          ]"
+          option-icon="pi pi-shopping-cart"
+      />
+      <OptionBox
+          option-label="Colegios"
+          :options="[
+            { text: 'A menos de 500 m' },
+            { text: 'A menos de 1 km' },
+            { text: 'A menos de 2 km' }
+          ]"
+          option-icon="pi pi-graduation-cap"
+      />
+      <OptionBox
+          option-label="Áreas verdes"
+          :options="[
+            { text: 'A menos de 500 m' },
+            { text: 'A menos de 1 km' },
+            { text: 'A menos de 2 km' }
+          ]"
+          option-icon="pi pi-image"
+      />
+
+      <button
+          class="px-6 py-[13px] p-3 mb-[13px] border bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 items-center shadow-md"
+      >
+        Buscar
+      </button>
+    </div>
+
+    <!-- Mapa y listado de viviendas -->
+    <div class="flex flex-row h-screen">
+      <!-- Mapa -->
+      <div class="w-1/2 mr-4">
+        <ClientOnly>
+          <Map
+              ref="mapRef"
+              :items="propertiesLocation"
+              :fit-to-items="true"
+              :max-bounds="maxBounds"
+              zoom-control-position="bottomleft"
+              :boundary-geojson="boundaryGeojson"
+              @select="onSelect"
+          />
+        </ClientOnly>
+      </div>
+
+      <!-- Listado de viviendas -->
+      <div class="flex flex-col w-1/2 gap-4">
+        <PropertyBox
+            v-for="(property, idx) in properties"
+            :key="idx"
+            v-bind="property"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref } from 'vue'
 
@@ -86,84 +160,6 @@ function handleSearchSelect(data: { lat: number; lng: number; displayName: strin
     mapRef.value.goToLocation(data.lat, data.lng, data.displayName)
   }
 }
-</script>
-
-<template>
-  <div class="flex flex-col gap-4 pt-4 px-4 pb-4">
-    <!-- Barra de búsqueda + opciones de búsqueda -->
-    <div class="flex flex-row items-center mr-4 mb-4 mt-2 gap-4">
-      <!-- Barra de búsqueda -->
-      <div class="w-1/2 items-center">
-        <SearchBar @select="handleSearchSelect" />
-      </div>
-
-      <!-- Opciones de búsqueda -->
-      <OptionBox
-          option-label="Supermercados"
-          :options="[
-            { text: 'A menos de 500 m' },
-            { text: 'A menos de 1 km' },
-            { text: 'A menos de 2 km' }
-          ]"
-          option-icon="pi pi-shopping-cart"
-      />
-      <OptionBox
-          option-label="Colegios"
-          :options="[
-            { text: 'A menos de 500 m' },
-            { text: 'A menos de 1 km' },
-            { text: 'A menos de 2 km' }
-          ]"
-          option-icon="pi pi-graduation-cap"
-      />
-      <OptionBox
-          option-label="Áreas verdes"
-          :options="[
-            { text: 'A menos de 500 m' },
-            { text: 'A menos de 1 km' },
-            { text: 'A menos de 2 km' }
-          ]"
-          option-icon="pi pi-image"
-      />
-
-      <button
-      class="px-6 py-[13px] p-3 mb-[13px] border bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 items-center shadow-md"
-      >
-        Buscar
-      </button>
-    </div>
-
-    <!-- Mapa y listado de viviendas -->
-    <div class="flex flex-row h-screen">
-        <!-- Mapa -->
-        <div class="w-1/2 mr-4">
-          <ClientOnly>
-            <Map
-                ref="mapRef"
-                :items="propertiesLocation"
-                :fit-to-items="true"
-                :max-bounds="maxBounds"
-                zoom-control-position="bottomleft"
-                :boundary-geojson="boundaryGeojson"
-                @select="onSelect"
-            />
-          </ClientOnly>
-        </div>
-
-      <!-- Listado de viviendas -->
-      <div class="flex flex-col w-1/2 gap-4">
-        <PropertyBox
-            v-for="(property, idx) in properties"
-            :key="idx"
-            v-bind="property"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
-
-<script lang="ts">
 
 const properties = [
   {
