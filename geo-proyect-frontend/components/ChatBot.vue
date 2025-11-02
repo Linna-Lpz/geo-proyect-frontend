@@ -44,16 +44,9 @@
                   v-for="(option, optIndex) in message.options"
                   :key="optIndex"
                   @click="handleOptionClick(option)"
-<<<<<<< Updated upstream
-                  class="w-full text-left px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium text-blue-700 flex items-center justify-start gap-2"
-                >
-                  <i v-if="option.icon" :class="['pi', option.icon, 'flex-shrink-0']"></i>
-                  <span v-html="option.label" class="flex-1"></span>
-=======
                   class="w-full text-left px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium text-blue-700"
                 >
                   {{ option.label }}
->>>>>>> Stashed changes
                 </button>
               </div>
 
@@ -87,21 +80,6 @@
                   :class="{ 'opacity-70': tempMultiSelectValues.length === 0 }"
                 >
                   {{ tempMultiSelectValues.length === 0 ? 'Continuar (sin selección)' : `Continuar (${tempMultiSelectValues.length} seleccionados)` }}
-                </button>
-              </div>
-
-              <!-- Slider de Importancia -->
-              <div v-if="message.requiresSlider" class="mt-3">
-                <ImportanceSlider
-                  v-model="currentSliderValue"
-                  :label="message.sliderLabel || 'Importancia'"
-                  :help-text="message.sliderHelp"
-                />
-                <button
-                  @click="submitSlider(message.sliderAction)"
-                  class="w-full mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
-                >
-                  Continuar
                 </button>
               </div>
             </div>
@@ -151,54 +129,19 @@
 
 <script setup lang="ts">
 import { ref, nextTick, onMounted } from 'vue';
-import type { PreferenciasDetalladasML } from '~/services/recommendationMLService';
-<<<<<<< Updated upstream
-import {
-  HomeIcon,
-  ArrowPathIcon,
-  DocumentTextIcon,
-  UserIcon,
-} from '@heroicons/vue/24/outline';
-=======
->>>>>>> Stashed changes
+import type { PreferenciasUsuario } from '~/services/recommendationService';
 
 interface ChatMessage {
   sender: 'bot' | 'user';
   text?: string;
-  options?: { label: string; value: any; action: string; icon?: string }[];
+  options?: { label: string; value: any; action: string }[];
   multiSelect?: boolean;
   multiSelectOptions?: { label: string; value: string }[];
   multiSelectAction?: string;
-  requiresSlider?: boolean;
-  sliderLabel?: string;
-  sliderHelp?: string;
-  sliderAction?: string;
-}
-
-// Interfaz temporal para recolectar datos del usuario
-interface PreferenciasTemp {
-  precio_min?: number;
-  precio_max?: number;
-  dormitorios_min?: number;
-  banos_min?: number;
-  tipo_inmueble_preferido?: string;
-  comunas_preferidas?: string[];
-  prioridad_precio: number;
-  prioridad_ubicacion: number;
-  prioridad_transporte: number;
-  prioridad_educacion: number;
-  prioridad_salud: number;
-  prioridad_areas_verdes: number;
-  prioridad_tamano: number;
-  requiere_estacionamiento?: boolean;
-  evitar_colegios?: boolean;
-  evitar_hospitales?: boolean;
-  evitar_metro?: boolean;
-  ruido_ambiente?: 'bajo' | 'medio' | 'alto';
 }
 
 const emit = defineEmits<{
-  (e: 'preferenciasCompletas', preferencias: PreferenciasDetalladasML): void;
+  (e: 'preferenciasCompletas', preferencias: PreferenciasUsuario): void;
 }>();
 
 const messages = ref<ChatMessage[]>([]);
@@ -210,10 +153,7 @@ const showQuickActions = ref(true);
 const tempMultiSelectValues = ref<string[]>([]);
 const temasSeleccionados = ref<string[]>([]);
 
-// Slider temporal state
-const currentSliderValue = ref(0);
-
-const preferencias = ref<Partial<PreferenciasTemp>>({
+const preferencias = ref<Partial<PreferenciasUsuario>>({
   prioridad_precio: 5,
   prioridad_ubicacion: 5,
   prioridad_transporte: 0,
@@ -225,6 +165,7 @@ const preferencias = ref<Partial<PreferenciasTemp>>({
   evitar_colegios: false,
   evitar_hospitales: false,
   evitar_metro: false,
+  evitar_areas_verdes: false,
 });
 
 let indiceTemaActual = 0;
@@ -258,97 +199,72 @@ const iniciarConversacion = () => {
     sender: 'bot',
     text: `
       <div class="space-y-2">
-<<<<<<< Updated upstream
-        <p class="font-semibold text-lg flex items-center gap-2">
-          ¡Hola! Soy tu asistente inmobiliario
-        </p>
-=======
         <p class="font-semibold text-lg">¡Hola! 👋 Soy tu asistente inmobiliario</p>
->>>>>>> Stashed changes
         <p>Te ayudaré a encontrar la propiedad perfecta según tus necesidades.</p>
         <p class="text-gray-600 text-sm">Primero te haré algunas preguntas básicas, y luego <strong>TÚ decides</strong> qué otros aspectos quieres especificar.</p>
       </div>
     `,
     options: [
-<<<<<<< Updated upstream
-      { label: 'Comenzar búsqueda', value: 'start', action: 'start' },
-=======
       { label: '🚀 Comenzar búsqueda', value: 'start', action: 'start' },
->>>>>>> Stashed changes
     ],
   });
 };
 
-// ============================================================================
-// UTILIDADES Y MAPEO DE ACCIONES
-// ============================================================================
-
 const handleOptionClick = (option: { label: string; value: any; action: string }) => {
   addUserMessage(option.label);
   
-  const handler = ACTION_HANDLERS[option.action];
-  if (handler) {
-    handler(option.value);
-  } else {
-    console.warn(`No handler found for action: ${option.action}`);
+  switch (option.action) {
+    case 'start':
+      preguntarPresupuesto();
+      break;
+    case 'presupuesto':
+      handlePresupuestoResponse(option.value);
+      break;
+    case 'dormitorios':
+      handleDormitoriosResponse(option.value);
+      break;
+    case 'tipo_inmueble':
+      handleTipoInmuebleResponse(option.value);
+      break;
+    case 'prioridad_transporte':
+      handlePrioridadTransporte(option.value);
+      break;
+    case 'prioridad_educacion':
+      handlePrioridadEducacion(option.value);
+      break;
+    case 'prioridad_salud':
+      handlePrioridadSalud(option.value);
+      break;
+    case 'prioridad_areas_verdes':
+      handlePrioridadAreasVerdes(option.value);
+      break;
+    case 'edificio_estacionamiento':
+      handleEdificioEstacionamiento(option.value);
+      break;
+    case 'ambiente_ruido':
+      handleAmbienteRuido(option.value);
+      break;
   }
-};
-
-// Mapa de labels para temas opcionales
-const TEMAS_LABELS: Record<string, string> = {
-  transporte: 'Transporte',
-  educacion: 'Educación',
-  salud: 'Salud',
-  areas_verdes: 'Áreas Verdes',
-  edificio: 'Características del Edificio',
-  ambiente: 'Ambiente/Ruido',
-};
-
-const handleUbicacionSubmit = () => {
-  const ubicacionSeleccionada = [...tempMultiSelectValues.value];
-  tempMultiSelectValues.value = [];
-  
-  if (ubicacionSeleccionada.length > 0) {
-    preferencias.value.comunas_preferidas = ubicacionSeleccionada;
-    addUserMessage(`Seleccioné: ${ubicacionSeleccionada.join(', ')}`);
-  } else {
-    addUserMessage('Sin preferencia de comuna');
-  }
-  
-  preguntarTemasOpcionales();
-};
-
-const handleTemasOpcionalesSubmit = () => {
-  temasSeleccionados.value = [...tempMultiSelectValues.value];
-  
-  if (temasSeleccionados.value.length > 0) {
-    const labels = temasSeleccionados.value.map(val => TEMAS_LABELS[val] || val);
-    addUserMessage(`Seleccioné: ${labels.join(', ')}`);
-  } else {
-    addUserMessage('Sin preferencias adicionales');
-  }
-  
-  tempMultiSelectValues.value = [];
-  preguntarTemasSeleccionados();
 };
 
 const submitMultiSelect = (action?: string) => {
   if (!action) return;
   
   if (action === 'ubicacion') {
-    handleUbicacionSubmit();
-  } else if (action === 'temas_opcionales') {
-    handleTemasOpcionalesSubmit();
+    // Caso especial: ubicación
+    const ubicacionSeleccionada = [...tempMultiSelectValues.value];
+    tempMultiSelectValues.value = [];
+    
+    if (ubicacionSeleccionada.length > 0) {
+      preferencias.value.comunas_preferidas = ubicacionSeleccionada;
+      addUserMessage(`Seleccioné: ${ubicacionSeleccionada.join(', ')}`);
+    } else {
+      addUserMessage('Sin preferencia de comuna');
+    }
+    
+    preguntarTemasOpcionales();
+    return;
   }
-<<<<<<< Updated upstream
-};
-
-const getSliderMessage = (value: number): string => {
-  if (value > 0) {
-    return `Importancia: +${value} (${getImportanceLabel(value)})`;
-  } else if (value < 0) {
-    return `Preferencia: ${value} (${getImportanceLabel(value)})`;
-=======
   
   if (action === 'temas_opcionales') {
     // Caso especial: temas opcionales
@@ -374,158 +290,6 @@ const getSliderMessage = (value: number): string => {
     tempMultiSelectValues.value = [];
     preguntarTemasSeleccionados();
     return;
->>>>>>> Stashed changes
-  }
-  return 'Neutral (0)';
-};
-
-const submitSlider = (action?: string) => {
-  if (!action) return;
-  
-  const value = currentSliderValue.value;
-  const mensaje = getSliderMessage(value);
-  addUserMessage(mensaje);
-  
-  const handler = ACTION_HANDLERS[action];
-  if (handler) {
-    handler(value);
-  }
-  
-  currentSliderValue.value = 0;
-};
-
-// Helper para etiquetas de importancia
-const getImportanceLabel = (value: number): string => {
-  if (value <= -8) return 'Evitar completamente';
-  if (value <= -5) return 'Preferir lejos';
-  if (value <= -2) return 'Algo lejos';
-  if (value === 0) return 'Neutral';
-  if (value <= 3) return 'Poco importante';
-  if (value <= 6) return 'Moderado';
-  if (value <= 8) return 'Importante';
-  return 'Muy importante';
-};
-
-// Helper para calcular pesos normalizados
-const calcularPesosNormalizados = () => {
-  const pesosRaw = {
-    precio: preferencias.value.prioridad_precio ?? 5,
-    ubicacion: preferencias.value.prioridad_ubicacion ?? 5,
-    tamano: preferencias.value.prioridad_tamano ?? 5,
-    transporte: preferencias.value.prioridad_transporte ?? 0,
-    educacion: preferencias.value.prioridad_educacion ?? 0,
-    salud: preferencias.value.prioridad_salud ?? 0,
-    servicios: 0,
-    areas_verdes: preferencias.value.prioridad_areas_verdes ?? 0,
-    edificio: preferencias.value.requiere_estacionamiento ? 3 : 0,
-  };
-  
-  const sumaTotal = Object.values(pesosRaw).reduce((acc, val) => acc + val, 0);
-  
-  return {
-    peso_precio: sumaTotal > 0 ? pesosRaw.precio / sumaTotal : 0.20,
-    peso_ubicacion: sumaTotal > 0 ? pesosRaw.ubicacion / sumaTotal : 0.20,
-    peso_tamano: sumaTotal > 0 ? pesosRaw.tamano / sumaTotal : 0.15,
-    peso_transporte: sumaTotal > 0 ? pesosRaw.transporte / sumaTotal : 0,
-    peso_educacion: sumaTotal > 0 ? pesosRaw.educacion / sumaTotal : 0,
-    peso_salud: sumaTotal > 0 ? pesosRaw.salud / sumaTotal : 0,
-    peso_servicios: 0,
-    peso_areas_verdes: sumaTotal > 0 ? pesosRaw.areas_verdes / sumaTotal : 0,
-    peso_edificio: sumaTotal > 0 ? pesosRaw.edificio / sumaTotal : 0.10,
-  };
-};
-
-// Helper para construir objeto PreferenciasDetalladasML
-const construirPreferenciasML = (): PreferenciasDetalladasML => {
-  const pesosNormalizados = calcularPesosNormalizados();
-  
-  const preferenciasML: PreferenciasDetalladasML = {
-    // Hard constraints
-    precio_min: preferencias.value.precio_min,
-    precio_max: preferencias.value.precio_max,
-    dormitorios_min: preferencias.value.dormitorios_min,
-    banos_min: preferencias.value.banos_min || 1,
-    
-    // Ubicación
-    comunas_preferidas: preferencias.value.comunas_preferidas,
-    
-    // Pesos globales NORMALIZADOS
-    ...pesosNormalizados,
-  };
-  
-  // Agregar detalles por categoría
-  agregarDetallesTransporte(preferenciasML);
-  agregarDetallesEducacion(preferenciasML);
-  agregarDetallesSalud(preferenciasML);
-  agregarDetallesAreasVerdes(preferenciasML);
-  agregarDetallesEdificio(preferenciasML);
-  
-  return preferenciasML;
-};
-
-const agregarDetallesTransporte = (prefs: PreferenciasDetalladasML) => {
-  if (temasSeleccionados.value.includes('transporte') && (preferencias.value.prioridad_transporte ?? 0) > 0) {
-    const prioridadTransporte = preferencias.value.prioridad_transporte ?? 0;
-    prefs.transporte = {
-      importancia_metro: preferencias.value.evitar_metro ? -prioridadTransporte : prioridadTransporte,
-      distancia_maxima_metro_m: preferencias.value.evitar_metro ? 9999999 : 1000,
-      importancia_buses: 0,
-      distancia_maxima_buses_m: 9999999,
-    };
-  }
-};
-
-const agregarDetallesEducacion = (prefs: PreferenciasDetalladasML) => {
-  if (temasSeleccionados.value.includes('educacion') && (preferencias.value.prioridad_educacion ?? 0) > 0) {
-    const prioridadEducacion = preferencias.value.prioridad_educacion ?? 0;
-    prefs.educacion = {
-      importancia_colegios: preferencias.value.evitar_colegios ? -prioridadEducacion : prioridadEducacion,
-      distancia_maxima_colegios_m: preferencias.value.evitar_colegios ? 9999999 : 1000,
-      importancia_universidades: 0,
-      distancia_maxima_universidades_m: 9999999,
-    };
-  }
-};
-
-const agregarDetallesSalud = (prefs: PreferenciasDetalladasML) => {
-  if (temasSeleccionados.value.includes('salud') && (preferencias.value.prioridad_salud ?? 0) > 0) {
-    const prioridadSalud = preferencias.value.prioridad_salud ?? 0;
-    prefs.salud = {
-      importancia_consultorios: 0,
-      distancia_maxima_consultorios_m: 9999999,
-      importancia_hospitales: preferencias.value.evitar_hospitales ? -prioridadSalud : prioridadSalud,
-      distancia_maxima_hospitales_m: preferencias.value.evitar_hospitales ? 9999999 : 2000,
-      importancia_farmacias: 0,
-      distancia_maxima_farmacias_m: 9999999,
-    };
-  }
-};
-
-const agregarDetallesAreasVerdes = (prefs: PreferenciasDetalladasML) => {
-  if (temasSeleccionados.value.includes('areas_verdes') && (preferencias.value.prioridad_areas_verdes ?? 0) > 0) {
-    const prioridadAreas = preferencias.value.prioridad_areas_verdes ?? 0;
-    prefs.areas_verdes = {
-      importancia_parques: prioridadAreas,
-      distancia_maxima_parques_m: 1500,
-      importancia_plazas: 0,
-      distancia_maxima_plazas_m: 9999999,
-      importancia_ciclovias: 0,
-    };
-  }
-};
-
-const agregarDetallesEdificio = (prefs: PreferenciasDetalladasML) => {
-  if (temasSeleccionados.value.includes('edificio')) {
-    prefs.edificio = {
-      importancia_gastos_bajos: 0,
-      importancia_piso_alto: 0,
-      importancia_orientacion: 0,
-      necesita_terraza: false,
-      importancia_terraza: 0,
-      tipo_preferido: preferencias.value.tipo_inmueble_preferido,
-      importancia_tipo: preferencias.value.tipo_inmueble_preferido ? 5 : 0,
-      importancia_privacidad: 0,
-    };
   }
 };
 
@@ -677,11 +441,14 @@ const preguntarSiguienteTema = () => {
 const preguntarTransporte = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🚇 Transporte</p><p class="text-sm text-gray-600 mt-1">¿Qué tan importante es estar cerca del metro?</p>',
-    requiresSlider: true,
-    sliderLabel: '¿Qué tan importante es estar cerca del metro?',
-    sliderHelp: 'Valores positivos: quieres estar cerca. Valores negativos: prefieres estar lejos (zona tranquila)',
-    sliderAction: 'prioridad_transporte',
+    text: '<p class="font-semibold">🚇 Transporte - ¿Qué tan importante es estar cerca del metro?</p>',
+    options: [
+      { label: 'Muy importante (muy cerca)', value: 10, action: 'prioridad_transporte' },
+      { label: 'Importante (cerca)', value: 7, action: 'prioridad_transporte' },
+      { label: 'Moderado', value: 5, action: 'prioridad_transporte' },
+      { label: 'Poco importante', value: 3, action: 'prioridad_transporte' },
+      { label: 'Prefiero LEJOS del metro (zona tranquila)', value: -7, action: 'prioridad_transporte' },
+    ],
   });
 };
 
@@ -699,11 +466,14 @@ const handlePrioridadTransporte = (value: number) => {
 const preguntarEducacion = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🏫 Educación</p><p class="text-sm text-gray-600 mt-1">¿Qué tan importante es estar cerca de colegios?</p>',
-    requiresSlider: true,
-    sliderLabel: '¿Qué tan importante es estar cerca de colegios?',
-    sliderHelp: 'Valores positivos: ideal si tienes niños. Valores negativos: prefieres lejos (evitar ruido)',
-    sliderAction: 'prioridad_educacion',
+    text: '<p class="font-semibold">🏫 Educación - ¿Qué tan importante es estar cerca de colegios?</p>',
+    options: [
+      { label: 'Muy importante (tengo niños)', value: 10, action: 'prioridad_educacion' },
+      { label: 'Importante', value: 7, action: 'prioridad_educacion' },
+      { label: 'Moderado', value: 5, action: 'prioridad_educacion' },
+      { label: 'Poco importante', value: 3, action: 'prioridad_educacion' },
+      { label: 'Prefiero LEJOS (evitar ruido de colegios)', value: -8, action: 'prioridad_educacion' },
+    ],
   });
 };
 
@@ -721,11 +491,14 @@ const handlePrioridadEducacion = (value: number) => {
 const preguntarSalud = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🏥 Salud</p><p class="text-sm text-gray-600 mt-1">¿Qué tan importante es estar cerca de centros de salud?</p>',
-    requiresSlider: true,
-    sliderLabel: '¿Qué tan importante es estar cerca de hospitales/clínicas?',
-    sliderHelp: 'Valores positivos: tranquilidad de tener centros médicos cerca. Valores negativos: evitar ruido de ambulancias',
-    sliderAction: 'prioridad_salud',
+    text: '<p class="font-semibold">🏥 Salud - ¿Qué tan importante es estar cerca de centros de salud?</p>',
+    options: [
+      { label: 'Muy importante', value: 10, action: 'prioridad_salud' },
+      { label: 'Importante', value: 7, action: 'prioridad_salud' },
+      { label: 'Moderado', value: 5, action: 'prioridad_salud' },
+      { label: 'Poco importante', value: 3, action: 'prioridad_salud' },
+      { label: 'Prefiero LEJOS (evitar ruido de ambulancias)', value: -7, action: 'prioridad_salud' },
+    ],
   });
 };
 
@@ -743,11 +516,13 @@ const handlePrioridadSalud = (value: number) => {
 const preguntarAreasVerdes = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🌳 Áreas Verdes</p><p class="text-sm text-gray-600 mt-1">¿Qué tan importante es estar cerca de parques?</p>',
-    requiresSlider: true,
-    sliderLabel: '¿Qué tan importante es estar cerca de parques y plazas?',
-    sliderHelp: 'Valores positivos: disfrutas de espacios verdes y naturaleza',
-    sliderAction: 'prioridad_areas_verdes',
+    text: '<p class="font-semibold">🌳 Áreas Verdes - ¿Qué tan importante es estar cerca de parques?</p>',
+    options: [
+      { label: 'Muy importante', value: 10, action: 'prioridad_areas_verdes' },
+      { label: 'Importante', value: 7, action: 'prioridad_areas_verdes' },
+      { label: 'Moderado', value: 5, action: 'prioridad_areas_verdes' },
+      { label: 'Poco importante', value: 3, action: 'prioridad_areas_verdes' },
+    ],
   });
 };
 
@@ -838,50 +613,18 @@ const finalizarConversacion = () => {
       text: `
         <div class="space-y-3">
           <p class="font-semibold text-green-600">✅ ¡Perfecto! Ya tengo toda la información</p>
+          <p>Estoy buscando las mejores propiedades para ti...</p>
           <div class="mt-3 p-3 bg-blue-50 rounded-lg text-sm space-y-1">
-            <p class="font-medium">Resumen de tus preferencias:</p>
+            <p class="font-medium">Tus preferencias:</p>
             ${resumenItems.join('')}
           </div>
         </div>
       `,
-      options: [
-        {
-          label: '🔍 Buscar Recomendaciones',
-          value: 'buscar',
-          action: 'buscar',
-        },
-        {
-          label: '🔄 Reiniciar Búsqueda',
-          value: 'reiniciar',
-          action: 'reiniciar',
-        }
-      ]
     });
     
-    // Emitir preferencias completas en formato ML usando helper
-    emit('preferenciasCompletas', construirPreferenciasML());
+    // Emitir preferencias completas
+    emit('preferenciasCompletas', preferencias.value as PreferenciasUsuario);
   }, 1000);
-};
-
-const ejecutarBusqueda = () => {
-  isLoading.value = true;
-  
-  addMessage({
-    sender: 'bot',
-    text: '🔍 Buscando las mejores propiedades para ti...',
-  });
-  
-  setTimeout(() => {
-    isLoading.value = false;
-    
-    // Emitir evento para iniciar búsqueda real usando helper
-    emit('preferenciasCompletas', construirPreferenciasML());
-    
-    addMessage({
-      sender: 'bot',
-      text: '✅ ¡Búsqueda iniciada! Los resultados aparecerán en la página.',
-    });
-  }, 1500);
 };
 
 const resetChat = () => {
@@ -898,28 +641,12 @@ const resetChat = () => {
     evitar_colegios: false,
     evitar_hospitales: false,
     evitar_metro: false,
+    evitar_areas_verdes: false,
   };
   temasSeleccionados.value = [];
   tempMultiSelectValues.value = [];
   indiceTemaActual = 0;
   iniciarConversacion();
-};
-
-// Mapa de acciones para reducir complejidad cognitiva del switch
-// Se define aquí después de que todas las funciones están disponibles
-const ACTION_HANDLERS: Record<string, (value: any) => void> = {
-  start: preguntarPresupuesto,
-  buscar: ejecutarBusqueda,
-  reiniciar: resetChat,
-  presupuesto: handlePresupuestoResponse,
-  dormitorios: handleDormitoriosResponse,
-  tipo_inmueble: handleTipoInmuebleResponse,
-  prioridad_transporte: handlePrioridadTransporte,
-  prioridad_educacion: handlePrioridadEducacion,
-  prioridad_salud: handlePrioridadSalud,
-  prioridad_areas_verdes: handlePrioridadAreasVerdes,
-  edificio_estacionamiento: handleEdificioEstacionamiento,
-  ambiente_ruido: handleAmbienteRuido,
 };
 
 const verResumen = () => {

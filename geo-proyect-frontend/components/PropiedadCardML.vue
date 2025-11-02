@@ -5,10 +5,7 @@
       <div class="flex justify-between items-start">
         <div class="flex-1">
           <h3 class="font-bold text-lg leading-tight">{{ propiedad.direccion }}</h3>
-          <p class="text-sm text-blue-100 mt-1 flex items-center gap-1">
-            <i class="pi pi-map-marker"></i>
-            {{ propiedad.comuna }}
-          </p>
+          <p class="text-sm text-blue-100 mt-1">📍 {{ propiedad.comuna }}</p>
         </div>
         
         <div class="text-center ml-4">
@@ -21,9 +18,8 @@
             {{ propiedad.score_total }}
           </div>
           <div class="text-xs text-blue-100">/ 100</div>
-          <div class="text-xs mt-1 bg-white/20 rounded px-2 py-0.5 flex items-center gap-1 justify-center">
-            <i class="pi pi-bullseye text-xs"></i>
-            {{ Math.round(propiedad.score_confianza * 100) }}%
+          <div class="text-xs mt-1 bg-white/20 rounded px-2 py-0.5">
+            🎯 {{ Math.round(propiedad.score_confianza * 100) }}%
           </div>
         </div>
       </div>
@@ -37,10 +33,10 @@
           ${{ propiedad.precio.toLocaleString() }}
         </div>
         <div class="flex gap-3 text-sm text-gray-600">
-          <span class="flex items-center gap-1"><i class="pi pi-building"></i>{{ propiedad.dormitorios }}D</span>
-          <span class="flex items-center gap-1"><i class="pi pi-box"></i>{{ propiedad.banos }}B</span>
-          <span v-if="propiedad.estacionamientos > 0" class="flex items-center gap-1"><i class="pi pi-car"></i>{{ propiedad.estacionamientos }}E</span>
-          <span class="flex items-center gap-1"><i class="pi pi-arrow-right-arrow-left"></i>{{ propiedad.superficie_util }}m²</span>
+          <span>🛏️ {{ propiedad.dormitorios }}D</span>
+          <span>🚿 {{ propiedad.banos }}B</span>
+          <span v-if="propiedad.estacionamientos > 0">🚗 {{ propiedad.estacionamientos }}E</span>
+          <span>📏 {{ propiedad.superficie_util }}m²</span>
         </div>
       </div>
       
@@ -53,9 +49,8 @@
       
       <!-- Puntos Fuertes -->
       <div class="mb-4">
-        <h4 class="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
-          <i class="pi pi-check-circle"></i>
-          Puntos Fuertes
+        <h4 class="text-sm font-semibold text-green-700 mb-2 flex items-center">
+          <span class="mr-2">✅</span> Puntos Fuertes
         </h4>
         <ul class="space-y-1.5">
           <li
@@ -70,9 +65,8 @@
       
       <!-- Puntos Débiles -->
       <div class="mb-4">
-        <h4 class="text-sm font-semibold text-orange-700 mb-2 flex items-center gap-2">
-          <i class="pi pi-exclamation-triangle"></i>
-          Puntos a Considerar
+        <h4 class="text-sm font-semibold text-orange-700 mb-2 flex items-center">
+          <span class="mr-2">⚠️</span> Puntos a Considerar
         </h4>
         <ul class="space-y-1.5">
           <li
@@ -87,10 +81,7 @@
       
       <!-- Distancias -->
       <div class="mb-4 p-3 bg-gray-50 rounded-lg">
-        <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-          <i class="pi pi-arrows-h"></i>
-          Distancias
-        </h4>
+        <h4 class="text-sm font-semibold text-gray-700 mb-2">📏 Distancias</h4>
         <div class="grid grid-cols-2 gap-2">
           <div
             v-for="(distancia, key) in propiedad.distancias"
@@ -105,9 +96,8 @@
       
       <!-- Scores por categoría (collapsible) -->
       <details class="mb-4">
-        <summary class="text-sm font-semibold text-gray-700 cursor-pointer hover:text-blue-600 flex items-center gap-2">
-          <i class="pi pi-chart-bar"></i>
-          Ver Scores Detallados por Categoría
+        <summary class="text-sm font-semibold text-gray-700 cursor-pointer hover:text-blue-600">
+          📊 Ver Scores Detallados por Categoría
         </summary>
         <div class="mt-3 space-y-2">
           <div
@@ -136,22 +126,21 @@
           @click="$emit('ver-mapa', propiedad)"
           class="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
         >
-          <i class="pi pi-map"></i>
-          Ver en Mapa
+          <span>🗺️</span> Ver en Mapa
         </button>
         <button
           @click="$emit('feedback', { propiedad, tipo: 'me_gusta' })"
-          class="px-4 py-2.5 border-2 border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center justify-center"
+          class="px-4 py-2.5 border-2 border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition-colors text-lg"
           title="Me gusta"
         >
-          <i class="pi pi-thumbs-up text-lg"></i>
+          👍
         </button>
         <button
           @click="$emit('feedback', { propiedad, tipo: 'no_me_gusta' })"
-          class="px-4 py-2.5 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center"
+          class="px-4 py-2.5 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-lg"
           title="No me gusta"
         >
-          <i class="pi pi-thumbs-down text-lg"></i>
+          👎
         </button>
       </div>
     </div>
@@ -186,12 +175,12 @@ const getScoreBorderColor = (score: number): string => {
 
 const formatDistanciaKey = (key: string): string => {
   const map: Record<string, string> = {
-    'metro_m': 'Metro',
-    'colegio_m': 'Colegio',
-    'salud_m': 'Salud',
-    'parque_m': 'Parque',
-    'supermercado_m': 'Supermercado',
-    'gimnasio_m': 'Gimnasio'
+    'metro_m': '🚇 Metro',
+    'colegio_m': '🎓 Colegio',
+    'salud_m': '🏥 Salud',
+    'parque_m': '🌳 Parque',
+    'supermercado_m': '🛒 Supermercado',
+    'gimnasio_m': '💪 Gimnasio'
   }
   return map[key] || key
 }

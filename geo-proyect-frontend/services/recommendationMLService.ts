@@ -180,92 +180,28 @@ export const crearPreferenciasVacias = (): PreferenciasDetalladasML => ({
 })
 
 /**
- * Transforma preferencias del frontend al formato del backend
- */
-const transformarPreferenciasParaBackend = (preferencias: PreferenciasDetalladasML) => {
-  return {
-    // Campos obligatorios
-    tipo_propiedad: "Casa", // Por ahora hardcodeado, en BD solo hay Casas
-    presupuesto: preferencias.precio_max || 200000000,
-    dormitorios: preferencias.dormitorios_min || 2,
-    banos: preferencias.banos_min || 1,
-    
-    // Pesos opcionales (-10 a +10)
-    peso_transporte: preferencias.peso_transporte || 0,
-    peso_educacion: preferencias.peso_educacion || 0,
-    peso_salud: preferencias.peso_salud || 0,
-    peso_recreacion: preferencias.peso_areas_verdes || 0,
-    peso_servicios: preferencias.peso_servicios || 0,
-    peso_seguridad: 0, // No está en frontend, default 0
-    peso_areas_verdes: preferencias.peso_areas_verdes || 0,
-    peso_ruido: 0, // No está en frontend, default 0
-    peso_calidad_aire: 0, // No está en frontend, default 0
-    peso_cultura: 0 // No está en frontend, default 0
-  }
-}
-
-/**
  * Obtiene recomendaciones usando el sistema ML avanzado
  */
 export const obtenerRecomendacionesML = async (
   preferencias: PreferenciasDetalladasML,
   limit: number = 10
 ): Promise<RecomendacionesResponseML> => {
-  // Transformar preferencias al formato del backend
-  const preferenciasBackend = transformarPreferenciasParaBackend(preferencias)
-  
   const response = await fetch(
-    `http://localhost:8000/api/v1/recomendaciones-ml`,
+    `http://localhost:8000/api/v1/recomendaciones-ml?limit=${limit}`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(preferenciasBackend)
+      body: JSON.stringify(preferencias)
     }
   )
   
   if (!response.ok) {
-    const errorText = await response.text()
-    console.error('Error del backend:', errorText)
     throw new Error('Error obteniendo recomendaciones ML')
   }
   
-  const data = await response.json()
-  
-  // Adaptar respuesta del backend al formato esperado por el frontend
-  return {
-    total_encontradas: data.length,
-    total_analizadas: data.length,
-    recomendaciones: data.map((prop: any, index: number) => ({
-      id: prop.id,
-      direccion: `${prop.comuna_nombre}, Propiedad #${prop.id}`,
-      comuna: prop.comuna_nombre,
-      precio: prop.precio,
-      superficie_util: prop.superficie_construida,
-      dormitorios: prop.dormitorios,
-      banos: prop.banos,
-      estacionamientos: 1,
-      latitud: 0,
-      longitud: 0,
-      score_total: prop.score,
-      score_confianza: 0.85,
-      scores_por_categoria: [],
-      resumen_explicacion: `Propiedad con score de ${prop.score}/100`,
-      puntos_fuertes: ['Buena ubicación', 'Precio competitivo'],
-      puntos_debiles: [],
-      distancias: {
-        metro: prop.distancia_metro,
-        colegio: prop.distancia_colegio,
-        hospital: prop.distancia_hospital,
-        parque: prop.distancia_parque
-      }
-    })),
-    preferencias_aplicadas: preferenciasBackend,
-    modelo_version: 'v1.0',
-    timestamp: new Date().toISOString(),
-    sugerencias: []
-  }
+  return await response.json()
 }
 
 /**
