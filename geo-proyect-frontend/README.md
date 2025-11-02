@@ -1,4 +1,25 @@
-# Nuxt Minimal Starter
+# 🏠 Frontend Recomendador Inmobiliario
+
+Sistema de recomendación de propiedades con chatbot dinámico basado en preferencias del usuario.
+
+## 🎯 Características Principales
+
+- ✅ **Chatbot Conversacional Dinámico** con flujo controlado por usuario
+- ✅ **Multi-select de preferencias** (el usuario elige qué responder)
+- ✅ **4 preguntas obligatorias**: Presupuesto, Dormitorios, Tipo (Casa/Depto), Ubicación
+- ✅ **6 temas opcionales**: Transporte, Educación, Salud, Áreas Verdes, Edificio, Ambiente
+- ✅ **Preferencias negativas** (ej: "prefiero LEJOS del metro")
+- ✅ Integración con backend FastAPI + PostgreSQL/PostGIS
+- ✅ Mapa interactivo con Leaflet
+- ✅ TypeScript + Vue 3 Composition API + Nuxt
+
+## 📝 Documentación
+
+Ver [IMPLEMENTACION_CHATBOT_DINAMICO.md](../IMPLEMENTACION_CHATBOT_DINAMICO.md) para:
+- Arquitectura completa del chatbot
+- Flujo de conversación detallado
+- Casos de uso y ejemplos de payloads
+- Guía de testing
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
