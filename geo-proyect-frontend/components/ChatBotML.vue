@@ -44,9 +44,11 @@
                   v-for="(option, optIndex) in message.options"
                   :key="optIndex"
                   @click="handleOptionClick(option)"
-                  class="w-full text-left px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium text-blue-700"
-                  v-html="option.label"
-                ></button>
+                  class="w-full text-left px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium text-blue-700 flex items-center justify-start gap-2"
+                >
+                  <i v-if="option.icon" :class="['pi', option.icon, 'flex-shrink-0']"></i>
+                  <span v-html="option.label" class="flex-1"></span>
+                </button>
               </div>
 
               <!-- Multi-Select Options (Checkboxes) -->
@@ -92,7 +94,7 @@
                   @click="submitSlider(message.sliderAction)"
                   class="w-full mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
                 >
-                  Continuar →
+                  Continuar
                 </button>
               </div>
             </div>
@@ -147,26 +149,15 @@ import { ref, nextTick, onMounted } from 'vue';
 import type { PreferenciasDetalladasML } from '~/services/recommendationMLService';
 import {
   HomeIcon,
-  CurrencyDollarIcon,
-  BuildingOfficeIcon,
-  MapPinIcon,
-  CheckCircleIcon,
-  MagnifyingGlassIcon,
   ArrowPathIcon,
   DocumentTextIcon,
   UserIcon,
-  BuildingOffice2Icon,
-  TruckIcon,
-  AcademicCapIcon,
-  HeartIcon,
-  SparklesIcon,
-  SpeakerWaveIcon,
 } from '@heroicons/vue/24/outline';
 
 interface ChatMessage {
   sender: 'bot' | 'user';
   text?: string;
-  options?: { label: string; value: any; action: string }[];
+  options?: { label: string; value: any; action: string; icon?: string }[];
   multiSelect?: boolean;
   multiSelectOptions?: { label: string; value: string }[];
   multiSelectAction?: string;
@@ -260,7 +251,6 @@ const iniciarConversacion = () => {
     text: `
       <div class="space-y-2">
         <p class="font-semibold text-lg flex items-center gap-2">
-          <i class="pi pi-user"></i>
           ¡Hola! Soy tu asistente inmobiliario
         </p>
         <p>Te ayudaré a encontrar la propiedad perfecta según tus necesidades.</p>
@@ -268,133 +258,95 @@ const iniciarConversacion = () => {
       </div>
     `,
     options: [
-      { label: '<i class="pi pi-play mr-2"></i>Comenzar búsqueda', value: 'start', action: 'start' },
+      { label: 'Comenzar búsqueda', value: 'start', action: 'start' },
     ],
   });
 };
 
+// ============================================================================
+// UTILIDADES Y MAPEO DE ACCIONES
+// ============================================================================
+
 const handleOptionClick = (option: { label: string; value: any; action: string }) => {
   addUserMessage(option.label);
   
-  switch (option.action) {
-    case 'start':
-      preguntarPresupuesto();
-      break;
-    case 'buscar':
-      ejecutarBusqueda();
-      break;
-    case 'reiniciar':
-      resetChat();
-      break;
-    case 'presupuesto':
-      handlePresupuestoResponse(option.value);
-      break;
-    case 'dormitorios':
-      handleDormitoriosResponse(option.value);
-      break;
-    case 'tipo_inmueble':
-      handleTipoInmuebleResponse(option.value);
-      break;
-    case 'prioridad_transporte':
-      handlePrioridadTransporte(option.value);
-      break;
-    case 'prioridad_educacion':
-      handlePrioridadEducacion(option.value);
-      break;
-    case 'prioridad_salud':
-      handlePrioridadSalud(option.value);
-      break;
-    case 'prioridad_areas_verdes':
-      handlePrioridadAreasVerdes(option.value);
-      break;
-    case 'edificio_estacionamiento':
-      handleEdificioEstacionamiento(option.value);
-      break;
-    case 'ambiente_ruido':
-      handleAmbienteRuido(option.value);
-      break;
+  const handler = ACTION_HANDLERS[option.action];
+  if (handler) {
+    handler(option.value);
+  } else {
+    console.warn(`No handler found for action: ${option.action}`);
   }
+};
+
+// Mapa de labels para temas opcionales
+const TEMAS_LABELS: Record<string, string> = {
+  transporte: 'Transporte',
+  educacion: 'Educación',
+  salud: 'Salud',
+  areas_verdes: 'Áreas Verdes',
+  edificio: 'Características del Edificio',
+  ambiente: 'Ambiente/Ruido',
+};
+
+const handleUbicacionSubmit = () => {
+  const ubicacionSeleccionada = [...tempMultiSelectValues.value];
+  tempMultiSelectValues.value = [];
+  
+  if (ubicacionSeleccionada.length > 0) {
+    preferencias.value.comunas_preferidas = ubicacionSeleccionada;
+    addUserMessage(`Seleccioné: ${ubicacionSeleccionada.join(', ')}`);
+  } else {
+    addUserMessage('Sin preferencia de comuna');
+  }
+  
+  preguntarTemasOpcionales();
+};
+
+const handleTemasOpcionalesSubmit = () => {
+  temasSeleccionados.value = [...tempMultiSelectValues.value];
+  
+  if (temasSeleccionados.value.length > 0) {
+    const labels = temasSeleccionados.value.map(val => TEMAS_LABELS[val] || val);
+    addUserMessage(`Seleccioné: ${labels.join(', ')}`);
+  } else {
+    addUserMessage('Sin preferencias adicionales');
+  }
+  
+  tempMultiSelectValues.value = [];
+  preguntarTemasSeleccionados();
 };
 
 const submitMultiSelect = (action?: string) => {
   if (!action) return;
   
   if (action === 'ubicacion') {
-    // Caso especial: ubicación
-    const ubicacionSeleccionada = [...tempMultiSelectValues.value];
-    tempMultiSelectValues.value = [];
-    
-    if (ubicacionSeleccionada.length > 0) {
-      preferencias.value.comunas_preferidas = ubicacionSeleccionada;
-      addUserMessage(`Seleccioné: ${ubicacionSeleccionada.join(', ')}`);
-    } else {
-      addUserMessage('Sin preferencia de comuna');
-    }
-    
-    preguntarTemasOpcionales();
-    return;
+    handleUbicacionSubmit();
+  } else if (action === 'temas_opcionales') {
+    handleTemasOpcionalesSubmit();
   }
-  
-  if (action === 'temas_opcionales') {
-    // Caso especial: temas opcionales
-    temasSeleccionados.value = [...tempMultiSelectValues.value];
-    
-    if (temasSeleccionados.value.length > 0) {
-      const labels = temasSeleccionados.value.map(val => {
-        const labelMap: Record<string, string> = {
-          'transporte': 'Transporte',
-          'educacion': 'Educación',
-          'salud': 'Salud',
-          'areas_verdes': 'Áreas Verdes',
-          'edificio': 'Características del Edificio',
-          'ambiente': 'Ambiente/Ruido',
-        };
-        return labelMap[val] || val;
-      });
-      addUserMessage(`Seleccioné: ${labels.join(', ')}`);
-    } else {
-      addUserMessage('Sin preferencias adicionales');
-    }
-    
-    tempMultiSelectValues.value = [];
-    preguntarTemasSeleccionados();
-    return;
+};
+
+const getSliderMessage = (value: number): string => {
+  if (value > 0) {
+    return `Importancia: +${value} (${getImportanceLabel(value)})`;
+  } else if (value < 0) {
+    return `Preferencia: ${value} (${getImportanceLabel(value)})`;
   }
+  return 'Neutral (0)';
 };
 
 const submitSlider = (action?: string) => {
   if (!action) return;
   
   const value = currentSliderValue.value;
-  
-  // Mostrar mensaje del usuario con el valor seleccionado
-  let mensaje = '';
-  if (value > 0) {
-    mensaje = `Importancia: +${value} (${getImportanceLabel(value)})`;
-  } else if (value < 0) {
-    mensaje = `Preferencia: ${value} (${getImportanceLabel(value)})`;
-  } else {
-    mensaje = 'Neutral (0)';
-  }
+  const mensaje = getSliderMessage(value);
   addUserMessage(mensaje);
   
-  // Ejecutar acción según el tipo
-  switch (action) {
-    case 'prioridad_transporte':
-      handlePrioridadTransporte(value);
-      break;
-    case 'prioridad_educacion':
-      handlePrioridadEducacion(value);
-      break;
-    case 'prioridad_salud':
-      handlePrioridadSalud(value);
-      break;
-    case 'prioridad_areas_verdes':
-      handlePrioridadAreasVerdes(value);
-      break;
+  const handler = ACTION_HANDLERS[action];
+  if (handler) {
+    handler(value);
   }
   
-  // Resetear slider
   currentSliderValue.value = 0;
 };
 
@@ -408,6 +360,129 @@ const getImportanceLabel = (value: number): string => {
   if (value <= 6) return 'Moderado';
   if (value <= 8) return 'Importante';
   return 'Muy importante';
+};
+
+// Helper para calcular pesos normalizados
+const calcularPesosNormalizados = () => {
+  const pesosRaw = {
+    precio: preferencias.value.prioridad_precio ?? 5,
+    ubicacion: preferencias.value.prioridad_ubicacion ?? 5,
+    tamano: preferencias.value.prioridad_tamano ?? 5,
+    transporte: preferencias.value.prioridad_transporte ?? 0,
+    educacion: preferencias.value.prioridad_educacion ?? 0,
+    salud: preferencias.value.prioridad_salud ?? 0,
+    servicios: 0,
+    areas_verdes: preferencias.value.prioridad_areas_verdes ?? 0,
+    edificio: preferencias.value.requiere_estacionamiento ? 3 : 0,
+  };
+  
+  const sumaTotal = Object.values(pesosRaw).reduce((acc, val) => acc + val, 0);
+  
+  return {
+    peso_precio: sumaTotal > 0 ? pesosRaw.precio / sumaTotal : 0.20,
+    peso_ubicacion: sumaTotal > 0 ? pesosRaw.ubicacion / sumaTotal : 0.20,
+    peso_tamano: sumaTotal > 0 ? pesosRaw.tamano / sumaTotal : 0.15,
+    peso_transporte: sumaTotal > 0 ? pesosRaw.transporte / sumaTotal : 0,
+    peso_educacion: sumaTotal > 0 ? pesosRaw.educacion / sumaTotal : 0,
+    peso_salud: sumaTotal > 0 ? pesosRaw.salud / sumaTotal : 0,
+    peso_servicios: 0,
+    peso_areas_verdes: sumaTotal > 0 ? pesosRaw.areas_verdes / sumaTotal : 0,
+    peso_edificio: sumaTotal > 0 ? pesosRaw.edificio / sumaTotal : 0.10,
+  };
+};
+
+// Helper para construir objeto PreferenciasDetalladasML
+const construirPreferenciasML = (): PreferenciasDetalladasML => {
+  const pesosNormalizados = calcularPesosNormalizados();
+  
+  const preferenciasML: PreferenciasDetalladasML = {
+    // Hard constraints
+    precio_min: preferencias.value.precio_min,
+    precio_max: preferencias.value.precio_max,
+    dormitorios_min: preferencias.value.dormitorios_min,
+    banos_min: preferencias.value.banos_min || 1,
+    
+    // Ubicación
+    comunas_preferidas: preferencias.value.comunas_preferidas,
+    
+    // Pesos globales NORMALIZADOS
+    ...pesosNormalizados,
+  };
+  
+  // Agregar detalles por categoría
+  agregarDetallesTransporte(preferenciasML);
+  agregarDetallesEducacion(preferenciasML);
+  agregarDetallesSalud(preferenciasML);
+  agregarDetallesAreasVerdes(preferenciasML);
+  agregarDetallesEdificio(preferenciasML);
+  
+  return preferenciasML;
+};
+
+const agregarDetallesTransporte = (prefs: PreferenciasDetalladasML) => {
+  if (temasSeleccionados.value.includes('transporte') && (preferencias.value.prioridad_transporte ?? 0) > 0) {
+    const prioridadTransporte = preferencias.value.prioridad_transporte ?? 0;
+    prefs.transporte = {
+      importancia_metro: preferencias.value.evitar_metro ? -prioridadTransporte : prioridadTransporte,
+      distancia_maxima_metro_m: preferencias.value.evitar_metro ? 9999999 : 1000,
+      importancia_buses: 0,
+      distancia_maxima_buses_m: 9999999,
+    };
+  }
+};
+
+const agregarDetallesEducacion = (prefs: PreferenciasDetalladasML) => {
+  if (temasSeleccionados.value.includes('educacion') && (preferencias.value.prioridad_educacion ?? 0) > 0) {
+    const prioridadEducacion = preferencias.value.prioridad_educacion ?? 0;
+    prefs.educacion = {
+      importancia_colegios: preferencias.value.evitar_colegios ? -prioridadEducacion : prioridadEducacion,
+      distancia_maxima_colegios_m: preferencias.value.evitar_colegios ? 9999999 : 1000,
+      importancia_universidades: 0,
+      distancia_maxima_universidades_m: 9999999,
+    };
+  }
+};
+
+const agregarDetallesSalud = (prefs: PreferenciasDetalladasML) => {
+  if (temasSeleccionados.value.includes('salud') && (preferencias.value.prioridad_salud ?? 0) > 0) {
+    const prioridadSalud = preferencias.value.prioridad_salud ?? 0;
+    prefs.salud = {
+      importancia_consultorios: 0,
+      distancia_maxima_consultorios_m: 9999999,
+      importancia_hospitales: preferencias.value.evitar_hospitales ? -prioridadSalud : prioridadSalud,
+      distancia_maxima_hospitales_m: preferencias.value.evitar_hospitales ? 9999999 : 2000,
+      importancia_farmacias: 0,
+      distancia_maxima_farmacias_m: 9999999,
+    };
+  }
+};
+
+const agregarDetallesAreasVerdes = (prefs: PreferenciasDetalladasML) => {
+  if (temasSeleccionados.value.includes('areas_verdes') && (preferencias.value.prioridad_areas_verdes ?? 0) > 0) {
+    const prioridadAreas = preferencias.value.prioridad_areas_verdes ?? 0;
+    prefs.areas_verdes = {
+      importancia_parques: prioridadAreas,
+      distancia_maxima_parques_m: 1500,
+      importancia_plazas: 0,
+      distancia_maxima_plazas_m: 9999999,
+      importancia_ciclovias: 0,
+    };
+  }
+};
+
+const agregarDetallesEdificio = (prefs: PreferenciasDetalladasML) => {
+  if (temasSeleccionados.value.includes('edificio')) {
+    prefs.edificio = {
+      importancia_gastos_bajos: 0,
+      importancia_piso_alto: 0,
+      importancia_orientacion: 0,
+      necesita_terraza: false,
+      importancia_terraza: 0,
+      tipo_preferido: preferencias.value.tipo_inmueble_preferido,
+      importancia_tipo: preferencias.value.tipo_inmueble_preferido ? 5 : 0,
+      importancia_privacidad: 0,
+    };
+  }
 };
 
 // ============================================================================
@@ -739,109 +814,8 @@ const finalizarConversacion = () => {
       ]
     });
     
-    // Convertir preferencias simples a formato ML
-    // Calcular pesos raw (sin normalizar)
-    const pesosRaw = {
-      precio: preferencias.value.prioridad_precio ?? 5,
-      ubicacion: preferencias.value.prioridad_ubicacion ?? 5,
-      tamano: preferencias.value.prioridad_tamano ?? 5,
-      transporte: preferencias.value.prioridad_transporte ?? 0,
-      educacion: preferencias.value.prioridad_educacion ?? 0,
-      salud: preferencias.value.prioridad_salud ?? 0,
-      servicios: 0,
-      areas_verdes: preferencias.value.prioridad_areas_verdes ?? 0,
-      edificio: preferencias.value.requiere_estacionamiento ? 3 : 0,
-    };
-    
-    // Calcular suma total
-    const sumaTotal = Object.values(pesosRaw).reduce((acc, val) => acc + val, 0);
-    
-    // Normalizar pesos para que sumen 1.0
-    const preferenciasML: PreferenciasDetalladasML = {
-      // Hard constraints
-      precio_min: preferencias.value.precio_min,
-      precio_max: preferencias.value.precio_max,
-      dormitorios_min: preferencias.value.dormitorios_min,
-      banos_min: preferencias.value.banos_min || 1,
-      
-      // Ubicación
-      comunas_preferidas: preferencias.value.comunas_preferidas,
-      
-      // Pesos globales NORMALIZADOS (suman 1.0)
-      peso_precio: sumaTotal > 0 ? pesosRaw.precio / sumaTotal : 0.20,
-      peso_ubicacion: sumaTotal > 0 ? pesosRaw.ubicacion / sumaTotal : 0.20,
-      peso_tamano: sumaTotal > 0 ? pesosRaw.tamano / sumaTotal : 0.15,
-      peso_transporte: sumaTotal > 0 ? pesosRaw.transporte / sumaTotal : 0,
-      peso_educacion: sumaTotal > 0 ? pesosRaw.educacion / sumaTotal : 0,
-      peso_salud: sumaTotal > 0 ? pesosRaw.salud / sumaTotal : 0,
-      peso_servicios: 0,
-      peso_areas_verdes: sumaTotal > 0 ? pesosRaw.areas_verdes / sumaTotal : 0,
-      peso_edificio: sumaTotal > 0 ? pesosRaw.edificio / sumaTotal : 0.10,
-    };
-    
-    // Agregar detalles de transporte si fue seleccionado
-    if (temasSeleccionados.value.includes('transporte') && (preferencias.value.prioridad_transporte ?? 0) > 0) {
-      const prioridadTransporte = preferencias.value.prioridad_transporte ?? 0;
-      preferenciasML.transporte = {
-        importancia_metro: preferencias.value.evitar_metro ? -prioridadTransporte : prioridadTransporte,
-        distancia_maxima_metro_m: preferencias.value.evitar_metro ? 9999999 : 1000,
-        importancia_buses: 0,
-        distancia_maxima_buses_m: 9999999,
-      };
-    }
-    
-    // Agregar detalles de educación si fue seleccionado
-    if (temasSeleccionados.value.includes('educacion') && (preferencias.value.prioridad_educacion ?? 0) > 0) {
-      const prioridadEducacion = preferencias.value.prioridad_educacion ?? 0;
-      preferenciasML.educacion = {
-        importancia_colegios: preferencias.value.evitar_colegios ? -prioridadEducacion : prioridadEducacion,
-        distancia_maxima_colegios_m: preferencias.value.evitar_colegios ? 9999999 : 1000,
-        importancia_universidades: 0,
-        distancia_maxima_universidades_m: 9999999,
-      };
-    }
-    
-    // Agregar detalles de salud si fue seleccionado
-    if (temasSeleccionados.value.includes('salud') && (preferencias.value.prioridad_salud ?? 0) > 0) {
-      const prioridadSalud = preferencias.value.prioridad_salud ?? 0;
-      preferenciasML.salud = {
-        importancia_consultorios: 0,
-        distancia_maxima_consultorios_m: 9999999,
-        importancia_hospitales: preferencias.value.evitar_hospitales ? -prioridadSalud : prioridadSalud,
-        distancia_maxima_hospitales_m: preferencias.value.evitar_hospitales ? 9999999 : 2000,
-        importancia_farmacias: 0,
-        distancia_maxima_farmacias_m: 9999999,
-      };
-    }
-    
-    // Agregar detalles de áreas verdes si fue seleccionado
-    if (temasSeleccionados.value.includes('areas_verdes') && (preferencias.value.prioridad_areas_verdes ?? 0) > 0) {
-      const prioridadAreas = preferencias.value.prioridad_areas_verdes ?? 0;
-      preferenciasML.areas_verdes = {
-        importancia_parques: prioridadAreas,
-        distancia_maxima_parques_m: 1500,
-        importancia_plazas: 0,
-        distancia_maxima_plazas_m: 9999999,
-        importancia_ciclovias: 0,
-      };
-    }
-    
-    // Agregar detalles de edificio si fue seleccionado
-    if (temasSeleccionados.value.includes('edificio')) {
-      preferenciasML.edificio = {
-        importancia_gastos_bajos: 0,
-        importancia_piso_alto: 0,
-        importancia_orientacion: 0,
-        necesita_terraza: false,
-        importancia_terraza: 0,
-        tipo_preferido: preferencias.value.tipo_inmueble_preferido,
-        importancia_tipo: preferencias.value.tipo_inmueble_preferido ? 5 : 0,
-        importancia_privacidad: 0,
-      };
-    }
-    
-    // Emitir preferencias completas en formato ML
-    emit('preferenciasCompletas', preferenciasML);
+    // Emitir preferencias completas en formato ML usando helper
+    emit('preferenciasCompletas', construirPreferenciasML());
   }, 1000);
 };
 
@@ -856,109 +830,8 @@ const ejecutarBusqueda = () => {
   setTimeout(() => {
     isLoading.value = false;
     
-    // Convertir preferencias simples a formato ML (mismo código que en finalizarConversacion)
-    // Calcular pesos raw (sin normalizar)
-    const pesosRaw = {
-      precio: preferencias.value.prioridad_precio ?? 5,
-      ubicacion: preferencias.value.prioridad_ubicacion ?? 5,
-      tamano: preferencias.value.prioridad_tamano ?? 5,
-      transporte: preferencias.value.prioridad_transporte ?? 0,
-      educacion: preferencias.value.prioridad_educacion ?? 0,
-      salud: preferencias.value.prioridad_salud ?? 0,
-      servicios: 0,
-      areas_verdes: preferencias.value.prioridad_areas_verdes ?? 0,
-      edificio: preferencias.value.requiere_estacionamiento ? 3 : 0,
-    };
-    
-    // Calcular suma total
-    const sumaTotal = Object.values(pesosRaw).reduce((acc, val) => acc + val, 0);
-    
-    // Normalizar pesos para que sumen 1.0
-    const preferenciasML: PreferenciasDetalladasML = {
-      // Hard constraints
-      precio_min: preferencias.value.precio_min,
-      precio_max: preferencias.value.precio_max,
-      dormitorios_min: preferencias.value.dormitorios_min,
-      banos_min: preferencias.value.banos_min || 1,
-      
-      // Ubicación
-      comunas_preferidas: preferencias.value.comunas_preferidas,
-      
-      // Pesos globales NORMALIZADOS (suman 1.0)
-      peso_precio: sumaTotal > 0 ? pesosRaw.precio / sumaTotal : 0.20,
-      peso_ubicacion: sumaTotal > 0 ? pesosRaw.ubicacion / sumaTotal : 0.20,
-      peso_tamano: sumaTotal > 0 ? pesosRaw.tamano / sumaTotal : 0.15,
-      peso_transporte: sumaTotal > 0 ? pesosRaw.transporte / sumaTotal : 0,
-      peso_educacion: sumaTotal > 0 ? pesosRaw.educacion / sumaTotal : 0,
-      peso_salud: sumaTotal > 0 ? pesosRaw.salud / sumaTotal : 0,
-      peso_servicios: 0,
-      peso_areas_verdes: sumaTotal > 0 ? pesosRaw.areas_verdes / sumaTotal : 0,
-      peso_edificio: sumaTotal > 0 ? pesosRaw.edificio / sumaTotal : 0.10,
-    };
-    
-    // Agregar detalles de transporte si fue seleccionado
-    if (temasSeleccionados.value.includes('transporte') && (preferencias.value.prioridad_transporte ?? 0) > 0) {
-      const prioridadTransporte = preferencias.value.prioridad_transporte ?? 0;
-      preferenciasML.transporte = {
-        importancia_metro: preferencias.value.evitar_metro ? -prioridadTransporte : prioridadTransporte,
-        distancia_maxima_metro_m: preferencias.value.evitar_metro ? 9999999 : 1000,
-        importancia_buses: 0,
-        distancia_maxima_buses_m: 9999999,
-      };
-    }
-    
-    // Agregar detalles de educación si fue seleccionado
-    if (temasSeleccionados.value.includes('educacion') && (preferencias.value.prioridad_educacion ?? 0) > 0) {
-      const prioridadEducacion = preferencias.value.prioridad_educacion ?? 0;
-      preferenciasML.educacion = {
-        importancia_colegios: preferencias.value.evitar_colegios ? -prioridadEducacion : prioridadEducacion,
-        distancia_maxima_colegios_m: preferencias.value.evitar_colegios ? 9999999 : 1000,
-        importancia_universidades: 0,
-        distancia_maxima_universidades_m: 9999999,
-      };
-    }
-    
-    // Agregar detalles de salud si fue seleccionado
-    if (temasSeleccionados.value.includes('salud') && (preferencias.value.prioridad_salud ?? 0) > 0) {
-      const prioridadSalud = preferencias.value.prioridad_salud ?? 0;
-      preferenciasML.salud = {
-        importancia_consultorios: 0,
-        distancia_maxima_consultorios_m: 9999999,
-        importancia_hospitales: preferencias.value.evitar_hospitales ? -prioridadSalud : prioridadSalud,
-        distancia_maxima_hospitales_m: preferencias.value.evitar_hospitales ? 9999999 : 2000,
-        importancia_farmacias: 0,
-        distancia_maxima_farmacias_m: 9999999,
-      };
-    }
-    
-    // Agregar detalles de áreas verdes si fue seleccionado
-    if (temasSeleccionados.value.includes('areas_verdes') && (preferencias.value.prioridad_areas_verdes ?? 0) > 0) {
-      const prioridadAreas = preferencias.value.prioridad_areas_verdes ?? 0;
-      preferenciasML.areas_verdes = {
-        importancia_parques: prioridadAreas,
-        distancia_maxima_parques_m: 1500,
-        importancia_plazas: 0,
-        distancia_maxima_plazas_m: 9999999,
-        importancia_ciclovias: 0,
-      };
-    }
-    
-    // Agregar detalles de edificio si fue seleccionado
-    if (temasSeleccionados.value.includes('edificio')) {
-      preferenciasML.edificio = {
-        importancia_gastos_bajos: 0,
-        importancia_piso_alto: 0,
-        importancia_orientacion: 0,
-        necesita_terraza: false,
-        importancia_terraza: 0,
-        tipo_preferido: preferencias.value.tipo_inmueble_preferido,
-        importancia_tipo: preferencias.value.tipo_inmueble_preferido ? 5 : 0,
-        importancia_privacidad: 0,
-      };
-    }
-    
-    // Emitir evento para iniciar búsqueda real
-    emit('preferenciasCompletas', preferenciasML);
+    // Emitir evento para iniciar búsqueda real usando helper
+    emit('preferenciasCompletas', construirPreferenciasML());
     
     addMessage({
       sender: 'bot',
@@ -986,6 +859,23 @@ const resetChat = () => {
   tempMultiSelectValues.value = [];
   indiceTemaActual = 0;
   iniciarConversacion();
+};
+
+// Mapa de acciones para reducir complejidad cognitiva del switch
+// Se define aquí después de que todas las funciones están disponibles
+const ACTION_HANDLERS: Record<string, (value: any) => void> = {
+  start: preguntarPresupuesto,
+  buscar: ejecutarBusqueda,
+  reiniciar: resetChat,
+  presupuesto: handlePresupuestoResponse,
+  dormitorios: handleDormitoriosResponse,
+  tipo_inmueble: handleTipoInmuebleResponse,
+  prioridad_transporte: handlePrioridadTransporte,
+  prioridad_educacion: handlePrioridadEducacion,
+  prioridad_salud: handlePrioridadSalud,
+  prioridad_areas_verdes: handlePrioridadAreasVerdes,
+  edificio_estacionamiento: handleEdificioEstacionamiento,
+  ambiente_ruido: handleAmbienteRuido,
 };
 
 const verResumen = () => {
