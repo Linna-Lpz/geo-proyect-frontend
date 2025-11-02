@@ -5,8 +5,9 @@
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-800">
-              🏠 Recomendaciones Inteligentes ML
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-home"></i>
+              Recomendaciones Inteligentes ML
             </h1>
             <p class="text-sm text-gray-500 mt-1">
               Encuentra tu propiedad ideal con inteligencia artificial
@@ -31,8 +32,8 @@
           <div class="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
             <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4">
               <h2 class="text-xl font-bold flex items-center gap-2">
-                <span>💬</span>
-                <span>Asistente de Búsqueda</span>
+                <i class="pi pi-comments"></i>
+                Asistente de Búsqueda
               </h2>
               <p class="text-sm text-blue-100 mt-1">
                 Configura tus preferencias detalladamente
@@ -53,7 +54,9 @@
             v-if="!buscandoPropiedades && recomendaciones.length === 0"
             class="bg-white rounded-xl shadow-lg p-12 text-center"
           >
-            <div class="text-6xl mb-4">🏠</div>
+            <div class="text-6xl mb-4 flex items-center justify-center">
+              <i class="pi pi-home text-blue-600" style="font-size: 4rem;"></i>
+            </div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">
               ¿Listo para encontrar tu hogar ideal?
             </h3>
@@ -63,12 +66,16 @@
             </p>
             <div class="mt-8 grid grid-cols-2 gap-4 text-sm">
               <div class="p-4 bg-blue-50 rounded-lg">
-                <div class="text-2xl mb-2">✅</div>
+                <div class="text-2xl mb-2 flex items-center justify-center">
+                  <i class="pi pi-check-circle text-green-600"></i>
+                </div>
                 <div class="font-medium">Define lo que QUIERES</div>
                 <div class="text-gray-600 text-xs mt-1">Valores positivos (+1 a +10)</div>
               </div>
               <div class="p-4 bg-red-50 rounded-lg">
-                <div class="text-2xl mb-2">❌</div>
+                <div class="text-2xl mb-2 flex items-center justify-center">
+                  <i class="pi pi-times-circle text-red-600"></i>
+                </div>
                 <div class="font-medium">Define lo que EVITAS</div>
                 <div class="text-gray-600 text-xs mt-1">Valores negativos (-1 a -10)</div>
               </div>
@@ -85,8 +92,9 @@
                 <div class="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
                 <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
               </div>
-              <h3 class="text-xl font-bold text-gray-800 mb-2">
-                🔍 Analizando propiedades...
+              <h3 class="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2 justify-center">
+                <i class="pi pi-search"></i>
+                Analizando propiedades...
               </h3>
               <p class="text-gray-600 text-center">
                 Nuestro modelo de inteligencia artificial está evaluando
@@ -106,8 +114,9 @@
             <div class="bg-white rounded-xl shadow-lg p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <h3 class="text-xl font-bold text-gray-800">
-                    ✨ {{ recomendaciones.length }} Propiedades Encontradas
+                  <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="pi pi-sparkles text-yellow-600"></i>
+                    {{ recomendaciones.length }} Propiedades Encontradas
                   </h3>
                   <p class="text-sm text-gray-600 mt-1">
                     Ordenadas por mejor coincidencia con tus preferencias
@@ -115,9 +124,10 @@
                 </div>
                 <button
                   @click="nuevaBusqueda"
-                  class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
-                  🔄 Nueva Búsqueda
+                  <i class="pi pi-refresh"></i>
+                  Nueva Búsqueda
                 </button>
               </div>
 
@@ -127,7 +137,7 @@
                 class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100"
               >
                 <div class="flex items-start gap-2">
-                  <span class="text-blue-600">ℹ️</span>
+                  <i class="pi pi-info-circle text-blue-600"></i>
                   <div class="flex-1 text-xs text-gray-700">
                     <strong>Modelo:</strong> {{ metadataML.modelo_version }} •
                     <strong>Procesado:</strong> {{ metadataML.total_propiedades_evaluadas }} propiedades •
@@ -170,7 +180,10 @@
           >
             <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-4 flex items-center justify-between">
               <div>
-                <h3 class="text-lg font-bold">🗺️ Ubicación</h3>
+                <h3 class="text-lg font-bold flex items-center gap-2">
+                  <i class="pi pi-map"></i>
+                  Ubicación
+                </h3>
                 <p class="text-sm text-purple-100">{{ propiedadSeleccionada.direccion }}</p>
               </div>
               <button
@@ -196,16 +209,16 @@
     <Teleport to="body">
       <div
         v-if="showToast"
-        class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl z-50 animate-slide-up"
+        class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl z-50 animate-slide-up flex items-center"
+        v-html="toastMessage"
       >
-        {{ toastMessage }}
       </div>
     </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import type {
   PreferenciasDetalladasML,
   PropiedadRecomendadaML
@@ -240,10 +253,10 @@ const handlePreferenciasCompletas = async (preferencias: PreferenciasDetalladasM
       tiempo_procesamiento_ms: 150 // Placeholder
     }
     
-    mostrarToast(`✅ ${response.recomendaciones.length} propiedades encontradas`)
+    mostrarToast(`${response.recomendaciones.length} propiedades encontradas`, 'success')
   } catch (error) {
     console.error('Error obteniendo recomendaciones:', error)
-    mostrarToast('❌ Error al buscar propiedades')
+    mostrarToast('Error al buscar propiedades', 'error')
   } finally {
     buscandoPropiedades.value = false
   }
@@ -265,9 +278,9 @@ const handleFeedback = (data: { propiedad: PropiedadRecomendadaML; tipo: string 
   const { propiedad, tipo } = data
   
   if (tipo === 'me_gusta') {
-    mostrarToast(`👍 Guardado: ${propiedad.direccion}`)
+    mostrarToast(`Guardado: ${propiedad.direccion}`, 'success')
   } else {
-    mostrarToast(`👎 Descartado: ${propiedad.direccion}`)
+    mostrarToast(`Descartado: ${propiedad.direccion}`, 'info')
   }
   
   // TODO: Enviar feedback al backend para mejorar el modelo
@@ -279,8 +292,14 @@ const nuevaBusqueda = () => {
   propiedadSeleccionada.value = null
 }
 
-const mostrarToast = (mensaje: string) => {
-  toastMessage.value = mensaje
+const mostrarToast = (mensaje: string, tipo: string = 'info') => {
+  const iconMap: Record<string, string> = {
+    success: 'pi-check-circle',
+    error: 'pi-times-circle',
+    info: 'pi-info-circle'
+  }
+  const icon = iconMap[tipo] || 'pi-info-circle'
+  toastMessage.value = `<i class="pi ${icon} mr-2"></i>${mensaje}`
   showToast.value = true
   
   setTimeout(() => {

@@ -32,8 +32,9 @@
       </div>
     </div>
     
-    <p v-if="helpText" class="text-xs text-gray-500 mt-2 italic">
-      💡 {{ helpText }}
+    <p v-if="helpText" class="text-xs text-gray-500 mt-2 italic flex items-center gap-1">
+      <i class="pi pi-info-circle"></i>
+      {{ helpText }}
     </p>
   </div>
 </template>

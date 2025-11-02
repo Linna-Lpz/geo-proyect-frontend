@@ -259,13 +259,16 @@ const iniciarConversacion = () => {
     sender: 'bot',
     text: `
       <div class="space-y-2">
-        <p class="font-semibold text-lg">¡Hola! 👋 Soy tu asistente inmobiliario</p>
+        <p class="font-semibold text-lg flex items-center gap-2">
+          <i class="pi pi-user"></i>
+          ¡Hola! Soy tu asistente inmobiliario
+        </p>
         <p>Te ayudaré a encontrar la propiedad perfecta según tus necesidades.</p>
         <p class="text-gray-600 text-sm">Primero te haré algunas preguntas básicas, y luego <strong>TÚ decides</strong> qué otros aspectos quieres especificar.</p>
       </div>
     `,
     options: [
-      { label: '🚀 Comenzar búsqueda', value: 'start', action: 'start' },
+      { label: '<i class="pi pi-play mr-2"></i>Comenzar búsqueda', value: 'start', action: 'start' },
     ],
   });
 };
@@ -1025,7 +1028,10 @@ const verResumen = () => {
     sender: 'bot',
     text: `
       <div class="space-y-2">
-        <p class="font-semibold">📋 Resumen de tus preferencias:</p>
+        <p class="font-semibold flex items-center gap-2">
+          <i class="pi pi-list"></i>
+          Resumen de tus preferencias:
+        </p>
         <div class="mt-2 space-y-1 text-sm">
           ${resumenItems.join('')}
         </div>

@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* PrimeVue Icons */
+@import 'primeicons/primeicons.css';
+
 :root{
   color-scheme: light;
 }
