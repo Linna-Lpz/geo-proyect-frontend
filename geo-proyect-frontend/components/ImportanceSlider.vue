@@ -33,7 +33,7 @@
     </div>
     
     <p v-if="helpText" class="text-xs text-gray-500 mt-2 italic">
-      💡 {{ helpText }}
+      <i class="pi pi-lightbulb mr-1"></i> {{ helpText }}
     </p>
   </div>
 </template>

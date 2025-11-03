@@ -4,7 +4,7 @@
       <div class="flex justify-between items-center py-4">
         <!-- Logo -->
         <NuxtLink to="/" class="flex items-center space-x-2">
-          <span class="text-2xl">🏠</span>
+          <span class="text-2xl"><i class="pi pi-home"></i></span>
           <span class="text-xl font-bold text-gray-800">GeoInmobiliaria</span>
         </NuxtLink>
 
@@ -20,7 +20,7 @@
             to="/recomendacionesML" 
             class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
           >
-            <span class="mr-1">✨</span>
+            <i class="pi pi-star mr-1"></i>
             Recomendaciones ML
           </NuxtLink>
         </div>
@@ -50,7 +50,7 @@
           class="block py-2 text-gray-700 hover:text-blue-600 font-medium"
           @click="mobileMenuOpen = false"
         >
-          ✨ Recomendaciones ML
+          <i class="pi pi-star mr-1"></i> Recomendaciones ML
         </NuxtLink>
       </div>
     </div>

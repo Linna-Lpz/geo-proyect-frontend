@@ -24,7 +24,7 @@
               v-if="message.sender === 'bot'"
               class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"
             >
-              🏠
+              <i class="pi pi-home"></i>
             </div>
             
             <div class="flex-1">
@@ -88,7 +88,7 @@
               v-if="message.sender === 'user'"
               class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm"
             >
-              👤
+              <i class="pi pi-user"></i>
             </div>
           </div>
         </div>
@@ -113,14 +113,14 @@
           @click="resetChat"
           class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
         >
-          🔄 Reiniciar
+          <i class="pi pi-refresh mr-1"></i> Reiniciar
         </button>
         <button
           v-if="preferencias.precio_min"
           @click="verResumen"
           class="px-4 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
         >
-          📋 Ver Resumen
+          <i class="pi pi-list mr-1"></i> Ver Resumen
         </button>
       </div>
     </div>
@@ -199,13 +199,13 @@ const iniciarConversacion = () => {
     sender: 'bot',
     text: `
       <div class="space-y-2">
-        <p class="font-semibold text-lg">¡Hola! 👋 Soy tu asistente inmobiliario</p>
+        <p class="font-semibold text-lg">¡Hola! Soy tu asistente inmobiliario</p>
         <p>Te ayudaré a encontrar la propiedad perfecta según tus necesidades.</p>
         <p class="text-gray-600 text-sm">Primero te haré algunas preguntas básicas, y luego <strong>TÚ decides</strong> qué otros aspectos quieres especificar.</p>
       </div>
     `,
     options: [
-      { label: '🚀 Comenzar búsqueda', value: 'start', action: 'start' },
+      { label: 'Comenzar búsqueda', value: 'start', action: 'start' },
     ],
   });
 };
@@ -273,13 +273,13 @@ const submitMultiSelect = (action?: string) => {
     if (temasSeleccionados.value.length > 0) {
       const labels = temasSeleccionados.value.map(val => {
         const labelMap: Record<string, string> = {
-          'transporte': '🚇 Transporte',
-          'educacion': '🏫 Educación',
-          'salud': '🏥 Salud',
-          'areas_verdes': '🌳 Áreas Verdes',
-          'edificio': '🏢 Características del Edificio',
-          'ambiente': '🔊 Ambiente/Ruido',
-        };
+            'transporte': 'Transporte',
+            'educacion': 'Educación',
+            'salud': 'Salud',
+            'areas_verdes': 'Áreas Verdes',
+            'edificio': 'Características del Edificio',
+            'ambiente': 'Ambiente/Ruido',
+          };
         return labelMap[val] || val;
       });
       addUserMessage(`Seleccioné: ${labels.join(', ')}`);
@@ -300,7 +300,7 @@ const submitMultiSelect = (action?: string) => {
 const preguntarPresupuesto = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">💰 ¿Cuál es tu presupuesto?</p><p class="text-sm text-gray-600">Pregunta obligatoria (1/4)</p>',
+    text: '<p class="font-semibold"><i class="pi pi-money-bill mr-1"></i> ¿Cuál es tu presupuesto?</p><p class="text-sm text-gray-600">Pregunta obligatoria (1/4)</p>',
     options: [
       { label: 'Hasta $300.000', value: { min: 0, max: 300000 }, action: 'presupuesto' },
       { label: '$300.000 - $500.000', value: { min: 300000, max: 500000 }, action: 'presupuesto' },
@@ -319,7 +319,7 @@ const handlePresupuestoResponse = (value: { min: number; max: number }) => {
 const preguntarDormitorios = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🛏️ ¿Cuántos dormitorios necesitas mínimo?</p><p class="text-sm text-gray-600">Pregunta obligatoria (2/4)</p>',
+    text: '<p class="font-semibold"><i class="pi pi-user mr-1"></i> ¿Cuántos dormitorios necesitas mínimo?</p><p class="text-sm text-gray-600">Pregunta obligatoria (2/4)</p>',
     options: [
       { label: '1 dormitorio', value: 1, action: 'dormitorios' },
       { label: '2 dormitorios', value: 2, action: 'dormitorios' },
@@ -337,11 +337,11 @@ const handleDormitoriosResponse = (value: number) => {
 const preguntarTipoInmueble = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🏠 ¿Qué tipo de inmueble prefieres?</p><p class="text-sm text-gray-600">Pregunta obligatoria (3/4)</p>',
+    text: '<p class="font-semibold"><i class="pi pi-home mr-1"></i> ¿Qué tipo de inmueble prefieres?</p><p class="text-sm text-gray-600">Pregunta obligatoria (3/4)</p>',
     options: [
-      { label: '🏡 Casa', value: 'Casa', action: 'tipo_inmueble' },
-      { label: '🏢 Departamento', value: 'Departamento', action: 'tipo_inmueble' },
-      { label: '✨ Cualquiera', value: '', action: 'tipo_inmueble' },
+      { label: 'Casa', value: 'Casa', action: 'tipo_inmueble' },
+      { label: 'Departamento', value: 'Departamento', action: 'tipo_inmueble' },
+      { label: 'Cualquiera', value: '', action: 'tipo_inmueble' },
     ],
   });
 };
@@ -356,13 +356,13 @@ const handleTipoInmuebleResponse = (value: string) => {
 const preguntarUbicacion = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">�� ¿En qué zona te gustaría vivir?</p><p class="text-sm text-gray-600">Pregunta obligatoria (4/4) - Puedes elegir varias o ninguna</p>',
+    text: '<p class="font-semibold"><i class="pi pi-map-marker mr-1"></i> ¿En qué zona te gustaría vivir?</p><p class="text-sm text-gray-600">Pregunta obligatoria (4/4) - Puedes elegir varias o ninguna</p>',
     multiSelect: true,
     multiSelectOptions: [
-      { label: '🏙️ Santiago', value: 'Santiago' },
-      { label: '🌳 Ñuñoa', value: 'Ñuñoa' },
-      { label: '🏔️ La Reina', value: 'La Reina' },
-      { label: '🚉 Estación Central', value: 'Estación Central' },
+      { label: 'Santiago', value: 'Santiago' },
+      { label: 'Ñuñoa', value: 'Ñuñoa' },
+      { label: 'La Reina', value: 'La Reina' },
+      { label: 'Estación Central', value: 'Estación Central' },
     ],
     multiSelectAction: 'ubicacion',
   });
@@ -377,19 +377,19 @@ const preguntarTemasOpcionales = () => {
     sender: 'bot',
     text: `
       <div class="space-y-2">
-        <p class="font-semibold">🎯 ¡Perfecto! Ahora tú decides</p>
+        <p class="font-semibold"><i class="pi pi-check mr-1"></i> ¡Perfecto! Ahora tú decides</p>
         <p class="text-sm text-gray-600">Selecciona <strong>SOLO</strong> los temas que te interesa especificar.</p>
         <p class="text-xs text-gray-500">Te haré preguntas solo sobre lo que marques. Si no marcas nada, buscaré propiedades solo con tus preferencias básicas.</p>
       </div>
     `,
     multiSelect: true,
     multiSelectOptions: [
-      { label: '🚇 Transporte (cercanía a metro)', value: 'transporte' },
-      { label: '🏫 Educación (colegios)', value: 'educacion' },
-      { label: '🏥 Salud (hospitales, clínicas)', value: 'salud' },
-      { label: '🌳 Áreas Verdes (parques)', value: 'areas_verdes' },
-      { label: '🏢 Características del Edificio', value: 'edificio' },
-      { label: '🔊 Ambiente/Ruido', value: 'ambiente' },
+      { label: 'Transporte (cercanía a metro)', value: 'transporte' },
+      { label: 'Educación (colegios)', value: 'educacion' },
+      { label: 'Salud (hospitales, clínicas)', value: 'salud' },
+      { label: 'Áreas Verdes (parques)', value: 'areas_verdes' },
+      { label: 'Características del Edificio', value: 'edificio' },
+      { label: 'Ambiente/Ruido', value: 'ambiente' },
     ],
     multiSelectAction: 'temas_opcionales',
   });
@@ -441,7 +441,7 @@ const preguntarSiguienteTema = () => {
 const preguntarTransporte = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🚇 Transporte - ¿Qué tan importante es estar cerca del metro?</p>',
+    text: '<p class="font-semibold"><i class="pi pi-train mr-1"></i> Transporte - ¿Qué tan importante es estar cerca del metro?</p>',
     options: [
       { label: 'Muy importante (muy cerca)', value: 10, action: 'prioridad_transporte' },
       { label: 'Importante (cerca)', value: 7, action: 'prioridad_transporte' },
@@ -466,7 +466,7 @@ const handlePrioridadTransporte = (value: number) => {
 const preguntarEducacion = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🏫 Educación - ¿Qué tan importante es estar cerca de colegios?</p>',
+    text: '<p class="font-semibold"><i class="pi pi-book mr-1"></i> Educación - ¿Qué tan importante es estar cerca de colegios?</p>',
     options: [
       { label: 'Muy importante (tengo niños)', value: 10, action: 'prioridad_educacion' },
       { label: 'Importante', value: 7, action: 'prioridad_educacion' },
@@ -491,7 +491,7 @@ const handlePrioridadEducacion = (value: number) => {
 const preguntarSalud = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🏥 Salud - ¿Qué tan importante es estar cerca de centros de salud?</p>',
+    text: '<p class="font-semibold"><i class="pi pi-hospital mr-1"></i> Salud - ¿Qué tan importante es estar cerca de centros de salud?</p>',
     options: [
       { label: 'Muy importante', value: 10, action: 'prioridad_salud' },
       { label: 'Importante', value: 7, action: 'prioridad_salud' },
@@ -516,7 +516,7 @@ const handlePrioridadSalud = (value: number) => {
 const preguntarAreasVerdes = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🌳 Áreas Verdes - ¿Qué tan importante es estar cerca de parques?</p>',
+    text: '<p class="font-semibold"><i class="pi pi-tree mr-1"></i> Áreas Verdes - ¿Qué tan importante es estar cerca de parques?</p>',
     options: [
       { label: 'Muy importante', value: 10, action: 'prioridad_areas_verdes' },
       { label: 'Importante', value: 7, action: 'prioridad_areas_verdes' },
@@ -534,7 +534,7 @@ const handlePrioridadAreasVerdes = (value: number) => {
 const preguntarEdificio = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🏢 Características del Edificio - ¿Necesitas estacionamiento?</p>',
+    text: '<p class="font-semibold"><i class="pi pi-building mr-1"></i> Características del Edificio - ¿Necesitas estacionamiento?</p>',
     options: [
       { label: 'Sí, es indispensable', value: true, action: 'edificio_estacionamiento' },
       { label: 'No es necesario', value: false, action: 'edificio_estacionamiento' },
@@ -550,7 +550,7 @@ const handleEdificioEstacionamiento = (value: boolean) => {
 const preguntarAmbiente = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold">🔊 Ambiente/Ruido - ¿Qué nivel de ruido prefieres?</p>',
+    text: '<p class="font-semibold"><i class="pi pi-bell mr-1"></i> Ambiente/Ruido - ¿Qué nivel de ruido prefieres?</p>',
     options: [
       { label: 'Bajo (zona muy tranquila)', value: 'bajo', action: 'ambiente_ruido' },
       { label: 'Medio (normal urbano)', value: 'medio', action: 'ambiente_ruido' },
@@ -576,10 +576,10 @@ const finalizarConversacion = () => {
     
     // Construir resumen dinámico
     const resumenItems: string[] = [
-      `<p>💰 Presupuesto: $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
-      `<p>🛏️ Dormitorios: ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
-      `<p>🏠 Tipo: ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
-      `<p>📍 Zona: ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
+      `<p><i class="pi pi-money-bill mr-1"></i> Presupuesto: $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
+      `<p><strong>Dormitorios:</strong> ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
+      `<p><i class="pi pi-home mr-1"></i> Tipo: ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
+      `<p><i class="pi pi-map-marker mr-1"></i> Zona: ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
     ];
     
     if (temasSeleccionados.value.length > 0) {
@@ -587,24 +587,24 @@ const finalizarConversacion = () => {
       
       if (temasSeleccionados.value.includes('transporte')) {
         const texto = preferencias.value.evitar_metro ? 'Prefiere LEJOS del metro' : `Prioridad: ${preferencias.value.prioridad_transporte}/10`;
-        resumenItems.push(`<p>🚇 Transporte: ${texto}</p>`);
+  resumenItems.push(`<p><i class="pi pi-train mr-1"></i> Transporte: ${texto}</p>`);
       }
       if (temasSeleccionados.value.includes('educacion')) {
         const texto = preferencias.value.evitar_colegios ? 'Prefiere LEJOS de colegios' : `Prioridad: ${preferencias.value.prioridad_educacion}/10`;
-        resumenItems.push(`<p>🏫 Educación: ${texto}</p>`);
+  resumenItems.push(`<p><i class="pi pi-book mr-1"></i> Educación: ${texto}</p>`);
       }
       if (temasSeleccionados.value.includes('salud')) {
         const texto = preferencias.value.evitar_hospitales ? 'Prefiere LEJOS de hospitales' : `Prioridad: ${preferencias.value.prioridad_salud}/10`;
-        resumenItems.push(`<p>🏥 Salud: ${texto}</p>`);
+  resumenItems.push(`<p><i class="pi pi-hospital mr-1"></i> Salud: ${texto}</p>`);
       }
       if (temasSeleccionados.value.includes('areas_verdes')) {
-        resumenItems.push(`<p>🌳 Áreas Verdes: Prioridad ${preferencias.value.prioridad_areas_verdes}/10</p>`);
+  resumenItems.push(`<p><i class="pi pi-tree mr-1"></i> Áreas Verdes: Prioridad ${preferencias.value.prioridad_areas_verdes}/10</p>`);
       }
       if (temasSeleccionados.value.includes('edificio')) {
-        resumenItems.push(`<p>🚗 Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
+  resumenItems.push(`<p><i class="pi pi-car mr-1"></i> Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
       }
       if (temasSeleccionados.value.includes('ambiente')) {
-        resumenItems.push(`<p>🔊 Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);
+  resumenItems.push(`<p><i class="pi pi-bell mr-1"></i> Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);
       }
     }
     
@@ -612,7 +612,7 @@ const finalizarConversacion = () => {
       sender: 'bot',
       text: `
         <div class="space-y-3">
-          <p class="font-semibold text-green-600">✅ ¡Perfecto! Ya tengo toda la información</p>
+          <p class="font-semibold text-green-600"><i class="pi pi-check-circle mr-1"></i> ¡Perfecto! Ya tengo toda la información</p>
           <p>Estoy buscando las mejores propiedades para ti...</p>
           <div class="mt-3 p-3 bg-blue-50 rounded-lg text-sm space-y-1">
             <p class="font-medium">Tus preferencias:</p>
@@ -651,35 +651,35 @@ const resetChat = () => {
 
 const verResumen = () => {
   const resumenItems: string[] = [
-    `<p>💰 <strong>Presupuesto:</strong> $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
-    `<p>🛏️ <strong>Dormitorios:</strong> ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
-    `<p>🏠 <strong>Tipo:</strong> ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
-    `<p>📍 <strong>Comunas:</strong> ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
+    `<p><i class="pi pi-money-bill mr-1"></i> <strong>Presupuesto:</strong> $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
+    `<p><strong>Dormitorios:</strong> ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
+    `<p><i class="pi pi-home mr-1"></i> <strong>Tipo:</strong> ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
+    `<p><i class="pi pi-map-marker mr-1"></i> <strong>Comunas:</strong> ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
   ];
   
-  if (temasSeleccionados.value.length > 0) {
+    if (temasSeleccionados.value.length > 0) {
     resumenItems.push(`<div class="mt-2 pt-2 border-t border-gray-200"><p class="font-medium mb-1">Preferencias adicionales:</p>`);
     
     if (temasSeleccionados.value.includes('transporte')) {
       const texto = preferencias.value.evitar_metro ? 'Prefiere LEJOS del metro' : `${preferencias.value.prioridad_transporte}/10`;
-      resumenItems.push(`<p>🚇 Transporte: ${texto}</p>`);
+      resumenItems.push(`<p><i class="pi pi-train mr-1"></i> Transporte: ${texto}</p>`);
     }
     if (temasSeleccionados.value.includes('educacion')) {
       const texto = preferencias.value.evitar_colegios ? 'Prefiere LEJOS de colegios' : `${preferencias.value.prioridad_educacion}/10`;
-      resumenItems.push(`<p>🏫 Educación: ${texto}</p>`);
+      resumenItems.push(`<p><i class="pi pi-book mr-1"></i> Educación: ${texto}</p>`);
     }
     if (temasSeleccionados.value.includes('salud')) {
       const texto = preferencias.value.evitar_hospitales ? 'Prefiere LEJOS de hospitales' : `${preferencias.value.prioridad_salud}/10`;
-      resumenItems.push(`<p>🏥 Salud: ${texto}</p>`);
+      resumenItems.push(`<p><i class="pi pi-hospital mr-1"></i> Salud: ${texto}</p>`);
     }
     if (temasSeleccionados.value.includes('areas_verdes')) {
-      resumenItems.push(`<p>🌳 Áreas Verdes: ${preferencias.value.prioridad_areas_verdes}/10</p>`);
+      resumenItems.push(`<p><i class="pi pi-tree mr-1"></i> Áreas Verdes: ${preferencias.value.prioridad_areas_verdes}/10</p>`);
     }
     if (temasSeleccionados.value.includes('edificio')) {
-      resumenItems.push(`<p>🚗 Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
+      resumenItems.push(`<p><i class="pi pi-car mr-1"></i> Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
     }
     if (temasSeleccionados.value.includes('ambiente')) {
-      resumenItems.push(`<p>🔊 Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);
+      resumenItems.push(`<p><i class="pi pi-bell mr-1"></i> Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);
     }
     
     resumenItems.push(`</div>`);
@@ -689,7 +689,7 @@ const verResumen = () => {
     sender: 'bot',
     text: `
       <div class="space-y-2">
-        <p class="font-semibold">📋 Resumen de tus preferencias:</p>
+        <p class="font-semibold"><i class="pi pi-file mr-1"></i> Resumen de tus preferencias:</p>
         <div class="mt-2 space-y-1 text-sm">
           ${resumenItems.join('')}
         </div>

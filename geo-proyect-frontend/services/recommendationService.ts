@@ -206,10 +206,10 @@ class RecommendationService {
    * Obtiene emoji según categoría de score
    */
   getEmojiScore(score: number): string {
-    if (score >= 80) return '🏆';
-    if (score >= 60) return '⭐';
-    if (score >= 40) return '👍';
-    return '💡';
+    if (score >= 80) return 'trophy';
+    if (score >= 60) return 'star';
+    if (score >= 40) return 'thumbs';
+    return 'idea';
   }
 }
 

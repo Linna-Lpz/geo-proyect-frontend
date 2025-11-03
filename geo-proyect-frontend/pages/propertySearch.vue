@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-gray-800 mb-2">
-          🏠 Predictor de Precios Inmobiliarios
+          <i class="pi pi-home mr-2"></i>Predictor de Precios Inmobiliarios
         </h1>
         <p class="text-gray-600 text-lg">
           Estimación inteligente basada en Machine Learning
@@ -32,7 +32,7 @@
         <div v-if="predictionHistory.length > 0" class="mt-12">
           <div class="bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-4">
-              📜 Historial de Predicciones
+              <i class="pi pi-history mr-2"></i>Historial de Predicciones
             </h3>
             <div class="space-y-3">
               <div
@@ -42,7 +42,7 @@
                 @click="currentPrediction = pred"
               >
                 <div class="flex items-center space-x-4">
-                  <div class="text-2xl">🏠</div>
+                  <div class="text-2xl"><i class="pi pi-home"></i></div>
                   <div>
                     <div class="font-semibold text-gray-800">
                       {{ pred.inputs.superficie }}m² • {{ pred.inputs.dormitorios }}D/{{ pred.inputs.banos }}B
@@ -67,7 +67,7 @@
 
         <!-- Información del Modelo -->
         <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h3 class="text-lg font-bold text-gray-800 mb-4">ℹ️ Acerca del Modelo</h3>
+          <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="pi pi-info-circle mr-2"></i>Acerca del Modelo</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div class="bg-blue-50 p-4 rounded-lg">
               <div class="text-blue-600 font-semibold mb-1">Algoritmo</div>
@@ -104,12 +104,12 @@ onMounted(async () => {
   try {
     const health = await predictionService.healthCheck();
     if (health.status === 'healthy') {
-      serverStatus.value = '✅ Servidor conectado';
+      serverStatus.value = 'Servidor conectado';
     } else {
-      serverStatus.value = '⚠️ Servidor con problemas';
+      serverStatus.value = 'Servidor con problemas';
     }
   } catch (error) {
-    serverStatus.value = '❌ Servidor desconectado';
+    serverStatus.value = 'Servidor desconectado';
     console.error('Error conectando al servidor:', error);
   }
 });

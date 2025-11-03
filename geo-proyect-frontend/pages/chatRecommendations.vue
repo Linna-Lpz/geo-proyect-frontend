@@ -7,7 +7,7 @@
         <!-- Chat Section (Left/Top) -->
         <div class="lg:col-span-1 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
           <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
-            <h1 class="text-xl font-bold">🏠 Asistente Inmobiliario</h1>
+            <h1 class="text-xl font-bold"><i class="pi pi-home mr-2"></i>Asistente Inmobiliario</h1>
             <p class="text-sm opacity-90">Encuentra tu propiedad ideal</p>
           </div>
           
@@ -27,7 +27,8 @@
             <div class="bg-gray-50 border-b border-gray-200 p-4 flex items-center justify-between">
               <div>
                 <h2 class="text-lg font-semibold text-gray-800">
-                  {{ todasLasRecomendaciones.length > 0 ? '🎯 Propiedades Recomendadas' : '📋 Resultados' }}
+                  <span v-if="todasLasRecomendaciones.length > 0"><i class="pi pi-check mr-2"></i> Propiedades Recomendadas</span>
+                  <span v-else><i class="pi pi-list mr-2"></i> Resultados</span>
                 </h2>
                 <p v-if="totalAnalizadas > 0" class="text-sm text-gray-600">
                   {{ todasLasRecomendaciones.length }} propiedades encontradas ({{ totalAnalizadas }} analizadas)
@@ -38,7 +39,7 @@
                 @click="toggleVista"
                 class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
               >
-                🗺️ Ver en Mapa
+                <i class="pi pi-map mr-2"></i>Ver en Mapa
               </button>
             </div>
 
@@ -53,7 +54,7 @@
             <!-- Empty State -->
             <div v-else-if="todasLasRecomendaciones.length === 0" class="flex-1 flex items-center justify-center p-8">
               <div class="text-center text-gray-500">
-                <div class="text-6xl mb-4">🏘️</div>
+                <div class="text-6xl mb-4"><i class="pi pi-home text-6xl"></i></div>
                 <p class="text-lg font-medium">Completa el chat para ver recomendaciones</p>
                 <p class="text-sm mt-2">El asistente te ayudará a encontrar tu propiedad ideal</p>
               </div>
@@ -70,7 +71,7 @@
                 <!-- Score Badge -->
                 <div class="flex items-start justify-between mb-3">
                   <div class="flex items-center gap-2">
-                    <span class="text-2xl">{{ getEmojiScore(propiedad.score_total) }}</span>
+                    <i :class="['text-2xl', iconClass(getEmojiScore(propiedad.score_total))]"></i>
                     <div>
                       <span :class="['text-2xl font-bold', getColorScore(propiedad.score_total)]">
                         {{ propiedad.score_total.toFixed(1) }}
@@ -88,7 +89,7 @@
                   {{ propiedad.direccion }}
                 </h3>
                 <p class="text-sm text-gray-600 mb-2">
-                  📍 {{ propiedad.comuna }}
+                  <i class="pi pi-map-marker mr-1"></i> {{ propiedad.comuna }}
                 </p>
 
                 <!-- Price & Details -->
@@ -97,13 +98,13 @@
                     {{ formatearPrecio(propiedad.precio) }}
                   </span>
                   <span class="text-gray-600">
-                    📐 {{ propiedad.superficie_util?.toFixed(0) || 'N/A' }}m²
+                    <i class="pi pi-arrows-h mr-1"></i> {{ propiedad.superficie_util?.toFixed(0) || 'N/A' }}m²
                   </span>
                   <span class="text-gray-600">
-                    🛏️ {{ propiedad.dormitorios }}D / {{ propiedad.banos }}B
+                    <i class="pi pi-user mr-1"></i> {{ propiedad.dormitorios }}D / {{ propiedad.banos }}B
                   </span>
                   <span v-if="propiedad.estacionamientos" class="text-gray-600">
-                    🚗 {{ propiedad.estacionamientos }}
+                    <i class="pi pi-car mr-1"></i> {{ propiedad.estacionamientos }}
                   </span>
                 </div>
 
@@ -121,16 +122,16 @@
                 <!-- Distancias -->
                 <div class="flex flex-wrap gap-3 text-xs text-gray-600">
                   <span v-if="propiedad.dist_metro_m">
-                    🚇 Metro: {{ formatearDistancia(propiedad.dist_metro_m) }}
+                    <i class="pi pi-train mr-1"></i> Metro: {{ formatearDistancia(propiedad.dist_metro_m) }}
                   </span>
                   <span v-if="propiedad.dist_educacion_min_m">
-                    🏫 Educación: {{ formatearDistancia(propiedad.dist_educacion_min_m) }}
+                    <i class="pi pi-book mr-1"></i> Educación: {{ formatearDistancia(propiedad.dist_educacion_min_m) }}
                   </span>
                   <span v-if="propiedad.dist_salud_min_m">
-                    🏥 Salud: {{ formatearDistancia(propiedad.dist_salud_min_m) }}
+                    <i class="pi pi-hospital mr-1"></i> Salud: {{ formatearDistancia(propiedad.dist_salud_min_m) }}
                   </span>
                   <span v-if="propiedad.dist_areas_verdes_m">
-                    🌳 Parques: {{ formatearDistancia(propiedad.dist_areas_verdes_m) }}
+                    <i class="pi pi-tree mr-1"></i> Parques: {{ formatearDistancia(propiedad.dist_areas_verdes_m) }}
                   </span>
                 </div>
 
@@ -141,31 +142,31 @@
                   </summary>
                   <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
                     <div class="flex justify-between p-2 bg-gray-50 rounded">
-                      <span>💰 Precio:</span>
+                      <span><i class="pi pi-money-bill mr-1"></i> Precio:</span>
                       <span class="font-semibold">{{ propiedad.scores_detallados.precio.toFixed(1) }}/20</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 rounded">
-                      <span>📍 Ubicación:</span>
+                      <span><i class="pi pi-map-marker mr-1"></i> Ubicación:</span>
                       <span class="font-semibold">{{ propiedad.scores_detallados.ubicacion.toFixed(1) }}/20</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 rounded">
-                      <span>📐 Tamaño:</span>
+                      <span><i class="pi pi-arrows-h mr-1"></i> Tamaño:</span>
                       <span class="font-semibold">{{ propiedad.scores_detallados.tamano.toFixed(1) }}/15</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 rounded">
-                      <span>🚇 Transporte:</span>
+                      <span><i class="pi pi-train mr-1"></i> Transporte:</span>
                       <span class="font-semibold">{{ propiedad.scores_detallados.transporte.toFixed(1) }}/15</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 rounded">
-                      <span>🏫 Educación:</span>
+                      <span><i class="pi pi-book mr-1"></i> Educación:</span>
                       <span class="font-semibold">{{ propiedad.scores_detallados.educacion.toFixed(1) }}/10</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 rounded">
-                      <span>🏥 Salud:</span>
+                      <span><i class="pi pi-hospital mr-1"></i> Salud:</span>
                       <span class="font-semibold">{{ propiedad.scores_detallados.salud.toFixed(1) }}/10</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 rounded col-span-2">
-                      <span>🌳 Áreas Verdes:</span>
+                      <span><i class="pi pi-tree mr-1"></i> Áreas Verdes:</span>
                       <span class="font-semibold">{{ propiedad.scores_detallados.areas_verdes.toFixed(1) }}/10</span>
                     </div>
                   </div>
@@ -243,13 +244,13 @@
           >
             <div class="bg-gray-50 border-b border-gray-200 p-4 flex items-center justify-between">
               <h2 class="text-lg font-semibold text-gray-800">
-                🗺️ Mapa de Propiedades
+                <i class="pi pi-map-marker mr-2"></i>Mapa de Propiedades
               </h2>
               <button
                 @click="toggleVista"
                 class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
               >
-                📋 Ver Lista
+                <i class="pi pi-list mr-2"></i> Ver Lista
               </button>
             </div>
             
@@ -412,6 +413,22 @@ const getColorScore = (score: number) => {
 
 const getEmojiScore = (score: number) => {
   return recommendationService.getEmojiScore(score);
+};
+
+// Map token -> PrimeIcons class
+const iconClass = (token: string) => {
+  switch (token) {
+    case 'trophy':
+      return 'pi pi-star';
+    case 'star':
+      return 'pi pi-star';
+    case 'thumbs':
+      return 'pi pi-thumbs-up';
+    case 'idea':
+      return 'pi pi-lightbulb';
+    default:
+      return 'pi pi-question';
+  }
 };
 </script>
 

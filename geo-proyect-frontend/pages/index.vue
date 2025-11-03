@@ -6,7 +6,7 @@
       <!-- Hero Section -->
       <div class="text-center mb-16">
         <h1 class="text-5xl font-bold text-gray-800 mb-4">
-          🏠 GeoInmobiliaria
+          <i class="pi pi-home mr-2"></i>GeoInmobiliaria
         </h1>
         <p class="text-xl text-gray-600 mb-8">
           Sistema inteligente de recomendaciones inmobiliarias con Machine Learning
@@ -15,14 +15,14 @@
           to="/recomendacionesML"
           class="inline-block px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transform hover:scale-105 transition-all shadow-lg"
         >
-          ✨ Encontrar Mi Propiedad Ideal
+          <i class="pi pi-search mr-2"></i>Encontrar Mi Propiedad Ideal
         </NuxtLink>
       </div>
 
       <!-- Features -->
       <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-          <div class="text-5xl mb-4">🤖</div>
+          <div class="text-5xl mb-4"><i class="pi pi-cog text-5xl"></i></div>
           <h3 class="text-xl font-bold text-gray-800 mb-2">Machine Learning</h3>
           <p class="text-gray-600">
             Sistema de scoring avanzado con preferencias personalizadas (-10 a +10)
@@ -30,7 +30,7 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-          <div class="text-5xl mb-4">📍</div>
+          <div class="text-5xl mb-4"><i class="pi pi-map-marker text-5xl"></i></div>
           <h3 class="text-xl font-bold text-gray-800 mb-2">Análisis Geoespacial</h3>
           <p class="text-gray-600">
             21 métricas de distancia a servicios: metro, parques, hospitales, colegios
@@ -38,7 +38,7 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-          <div class="text-5xl mb-4">⚡</div>
+          <div class="text-5xl mb-4"><i class="pi pi-bolt text-5xl"></i></div>
           <h3 class="text-xl font-bold text-gray-800 mb-2">Recomendaciones Inteligentes</h3>
           <p class="text-gray-600">
             Encuentra propiedades que se ajustan exactamente a tus preferencias
@@ -72,12 +72,12 @@
           Comunas Disponibles
         </h2>
         <div class="flex flex-wrap justify-center gap-3">
-          <span 
+            <span 
             v-for="comuna in comunas" 
             :key="comuna"
             class="px-6 py-3 bg-white rounded-full shadow-md text-gray-700 font-medium"
           >
-            📍 {{ comuna }}
+            <i class="pi pi-map-marker mr-1"></i> {{ comuna }}
           </span>
         </div>
       </div>

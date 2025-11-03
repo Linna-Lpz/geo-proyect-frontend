@@ -156,7 +156,7 @@
           :disabled="loading"
           class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          <span v-if="!loading">🔮 Predecir Precio</span>
+          <span v-if="!loading"><i class="pi pi-search mr-2"></i>Predecir Precio</span>
           <span v-else class="flex items-center justify-center">
             <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>

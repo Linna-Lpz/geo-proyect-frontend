@@ -2,7 +2,7 @@
   <div class="relative w-full h-full">
     <div id="map" class="w-full h-full"></div>
     
-    <!-- Toggle POI Button -->
+  <!-- Toggle POI Button -->
     <button
       v-if="selectedPropertyInfo"
       @click="togglePOI"
@@ -13,7 +13,8 @@
           : 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300'
       ]"
     >
-      {{ showPOI ? '👁️ Ocultar Servicios' : '🗺️ Mostrar Servicios' }}
+      <span v-if="showPOI"><i class="pi pi-eye mr-2"></i>Ocultar Servicios</span>
+      <span v-else><i class="pi pi-map mr-2"></i>Mostrar Servicios</span>
     </button>
     
     <!-- POI Legend (cuando se muestran los POIs) -->
@@ -21,38 +22,38 @@
       v-if="selectedPropertyInfo && showPOI && puntosDeInteres"
       class="absolute top-20 right-4 bg-white rounded-lg shadow-xl p-3 z-10 max-w-xs"
     >
-      <h4 class="font-bold text-sm mb-2 text-gray-700">📍 Servicios Cercanos</h4>
+  <h4 class="font-bold text-sm mb-2 text-gray-700"><i class="pi pi-map-marker mr-2"></i>Servicios Cercanos</h4>
       <div class="space-y-1 text-xs">
         <div v-if="puntosDeInteres.metros?.length" class="flex items-center gap-2">
-          <span>🚇</span>
+          <i class="pi pi-train"></i>
           <span class="text-gray-600">{{ puntosDeInteres.metros.length }} Metro(s)</span>
         </div>
         <div v-if="puntosDeInteres.colegios?.length" class="flex items-center gap-2">
-          <span>🎓</span>
+          <i class="pi pi-book"></i>
           <span class="text-gray-600">{{ puntosDeInteres.colegios.length }} Colegio(s)</span>
         </div>
         <div v-if="puntosDeInteres.centros_medicos?.length" class="flex items-center gap-2">
-          <span>🏥</span>
+          <i class="pi pi-hospital"></i>
           <span class="text-gray-600">{{ puntosDeInteres.centros_medicos.length }} Centro(s) Médico(s)</span>
         </div>
         <div v-if="puntosDeInteres.supermercados?.length" class="flex items-center gap-2">
-          <span>🛒</span>
+          <i class="pi pi-shopping-cart"></i>
           <span class="text-gray-600">{{ puntosDeInteres.supermercados.length }} Supermercado(s)</span>
         </div>
         <div v-if="puntosDeInteres.parques?.length" class="flex items-center gap-2">
-          <span>🌳</span>
+          <i class="pi pi-tree"></i>
           <span class="text-gray-600">{{ puntosDeInteres.parques.length }} Parque(s)</span>
         </div>
         <div v-if="puntosDeInteres.farmacias?.length" class="flex items-center gap-2">
-          <span>💊</span>
+          <i class="pi pi-plus-circle"></i>
           <span class="text-gray-600">{{ puntosDeInteres.farmacias.length }} Farmacia(s)</span>
         </div>
         <div v-if="puntosDeInteres.comisarias?.length" class="flex items-center gap-2">
-          <span>🚓</span>
+          <i class="pi pi-shield"></i>
           <span class="text-gray-600">{{ puntosDeInteres.comisarias.length }} Comisaría(s)</span>
         </div>
         <div v-if="puntosDeInteres.bomberos?.length" class="flex items-center gap-2">
-          <span>🚒</span>
+          <i class="pi pi-fire"></i>
           <span class="text-gray-600">{{ puntosDeInteres.bomberos.length }} Cuartel(es) Bomberos</span>
         </div>
       </div>
@@ -70,25 +71,23 @@
         @click="clearSelection"
         class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
       >
-        ✕
+        <i class="pi pi-times"></i>
       </button>
       
       <div class="space-y-2">
         <div class="flex items-center gap-2">
-          <span v-if="selectedPropertyInfo.score" class="text-2xl">
-            {{ getEmojiScore(selectedPropertyInfo.score) }}
-          </span>
+          <i v-if="selectedPropertyInfo.score" :class="['text-2xl', iconClass(getEmojiScore(selectedPropertyInfo.score))]"></i>
           <h3 class="font-bold text-lg">{{ selectedPropertyInfo.direccion }}</h3>
         </div>
         
-        <p class="text-sm text-gray-600">📍 {{ selectedPropertyInfo.comuna }}</p>
+  <p class="text-sm text-gray-600"><i class="pi pi-map-marker mr-1"></i> {{ selectedPropertyInfo.comuna }}</p>
         
         <div class="flex items-center gap-4 text-sm">
           <span class="font-bold text-green-600">
             {{ formatearPrecio(selectedPropertyInfo.precio) }}
           </span>
-          <span>🛏️ {{ selectedPropertyInfo.dormitorios }}D</span>
-          <span>🚿 {{ selectedPropertyInfo.banos }}B</span>
+          <span><i class="pi pi-user mr-1"></i> {{ selectedPropertyInfo.dormitorios }}D</span>
+          <span><i class="pi pi-shower mr-1"></i> {{ selectedPropertyInfo.banos }}B</span>
         </div>
         
         <div v-if="selectedPropertyInfo.score" class="mt-3 pt-3 border-t border-gray-200">
@@ -109,6 +108,7 @@ import { ref, onMounted, watch } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { obtenerPuntosDeInteresCercanos, type PointOfInterest, type PointsOfInterestResponse } from '~/services/pointsOfInterestService';
+import { recommendationService } from '~/services/recommendationService';
 
 interface Property {
   id: number;
@@ -231,23 +231,25 @@ const updateMarkers = (propiedades: Property[]) => {
 
 const getMarkerIcon = (score?: number): string => {
   let color = '#3B82F6'; // blue default
-  let emoji = '🏠';
+  let token = 'home';
 
   if (score !== undefined) {
     if (score >= 80) {
       color = '#10B981'; // green
-      emoji = '🏆';
+      token = 'trophy';
     } else if (score >= 60) {
       color = '#3B82F6'; // blue
-      emoji = '⭐';
+      token = 'star';
     } else if (score >= 40) {
       color = '#F59E0B'; // yellow
-      emoji = '👍';
+      token = 'thumbs';
     } else {
       color = '#6B7280'; // gray
-      emoji = '💡';
+      token = 'idea';
     }
   }
+
+  const icon = `<i class="${iconClass(token)}" style="font-size:28px;color:white;"></i>`;
 
   return `
     <div style="
@@ -262,10 +264,7 @@ const getMarkerIcon = (score?: number): string => {
       align-items: center;
       justify-content: center;
     ">
-      <span style="
-        transform: rotate(45deg);
-        font-size: 30px;
-      ">${emoji}</span>
+      <div style="transform: rotate(45deg);">${icon}</div>
     </div>
   `;
 };
@@ -292,29 +291,29 @@ const mostrarPuntosDeInteres = () => {
   
   const pois = puntosDeInteres.value;
   
-  // Metros (🚇)
-  pois.metros?.forEach(poi => agregarMarcadorPOI(poi, '🚇', '#EF4444', 'Metro'));
+  // Metros
+  pois.metros?.forEach(poi => agregarMarcadorPOI(poi, 'train', '#EF4444', 'Metro'));
   
-  // Colegios (🎓)
-  pois.colegios?.forEach(poi => agregarMarcadorPOI(poi, '🎓', '#8B5CF6', 'Colegio'));
+  // Colegios
+  pois.colegios?.forEach(poi => agregarMarcadorPOI(poi, 'book', '#8B5CF6', 'Colegio'));
   
-  // Centros médicos (🏥)
-  pois.centros_medicos?.forEach(poi => agregarMarcadorPOI(poi, '🏥', '#10B981', 'Centro Médico'));
+  // Centros médicos
+  pois.centros_medicos?.forEach(poi => agregarMarcadorPOI(poi, 'hospital', '#10B981', 'Centro Médico'));
   
-  // Supermercados (🛒)
-  pois.supermercados?.forEach(poi => agregarMarcadorPOI(poi, '🛒', '#F59E0B', 'Supermercado'));
+  // Supermercados
+  pois.supermercados?.forEach(poi => agregarMarcadorPOI(poi, 'shopping-cart', '#F59E0B', 'Supermercado'));
   
-  // Parques (🌳)
-  pois.parques?.forEach(poi => agregarMarcadorPOI(poi, '🌳', '#22C55E', 'Parque'));
+  // Parques
+  pois.parques?.forEach(poi => agregarMarcadorPOI(poi, 'tree', '#22C55E', 'Parque'));
   
-  // Farmacias (💊)
-  pois.farmacias?.forEach(poi => agregarMarcadorPOI(poi, '💊', '#06B6D4', 'Farmacia'));
+  // Farmacias
+  pois.farmacias?.forEach(poi => agregarMarcadorPOI(poi, 'plus-circle', '#06B6D4', 'Farmacia'));
   
-  // Comisarías (🚓)
-  pois.comisarias?.forEach(poi => agregarMarcadorPOI(poi, '🚓', '#3B82F6', 'Comisaría'));
+  // Comisarías
+  pois.comisarias?.forEach(poi => agregarMarcadorPOI(poi, 'shield', '#3B82F6', 'Comisaría'));
   
-  // Bomberos (🚒)
-  pois.bomberos?.forEach(poi => agregarMarcadorPOI(poi, '🚒', '#DC2626', 'Bomberos'));
+  // Bomberos
+  pois.bomberos?.forEach(poi => agregarMarcadorPOI(poi, 'fire', '#DC2626', 'Bomberos'));
 };
 
 // Función auxiliar para agregar un marcador de POI
@@ -333,7 +332,7 @@ const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, 
       align-items: center;
       justify-content: center;
     ">
-      <span style="font-size: 18px;">${emoji}</span>
+  <i class="${iconClass(emoji)}" style="font-size:18px;color:white"></i>
     </div>
   `;
   
@@ -350,10 +349,10 @@ const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, 
   }).addTo(map);
   
   // Agregar popup con información
-  const distanciaTexto = poi.distancia ? `<br><small>📏 ${poi.distancia}m de distancia</small>` : '';
+  const distanciaTexto = poi.distancia ? `<br><small><i class="pi pi-ruler"></i> ${poi.distancia}m de distancia</small>` : '';
   marker.bindPopup(`
     <div style="text-align: center;">
-      <strong>${emoji} ${tipo}</strong><br>
+      <strong><i class="${iconClass(emoji)}"></i> ${tipo}</strong><br>
       ${poi.nombre}
       ${distanciaTexto}
     </div>
@@ -409,12 +408,43 @@ const getColorScore = (score: number): string => {
   return 'text-gray-600';
 };
 
-const getEmojiScore = (score: number): string => {
-  if (score >= 80) return '🏆';
-  if (score >= 60) return '⭐';
-  if (score >= 40) return '👍';
-  return '💡';
+// Map token -> PrimeIcons class
+const iconClass = (token: string) => {
+  switch (token) {
+    case 'trophy':
+      return 'pi pi-star';
+    case 'star':
+      return 'pi pi-star';
+    case 'thumbs':
+      return 'pi pi-thumbs-up';
+    case 'idea':
+      return 'pi pi-lightbulb';
+    case 'train':
+      return 'pi pi-train';
+    case 'book':
+      return 'pi pi-book';
+    case 'hospital':
+      return 'pi pi-hospital';
+    case 'shopping-cart':
+      return 'pi pi-shopping-cart';
+    case 'tree':
+      return 'pi pi-tree';
+    case 'plus-circle':
+      return 'pi pi-plus-circle';
+    case 'shield':
+      return 'pi pi-shield';
+    case 'fire':
+      return 'pi pi-fire';
+    default:
+      return 'pi pi-question';
+  }
 };
+// Wrapper to obtain token from recommendation service
+const getEmojiScore = (score: number): string => {
+  return recommendationService.getEmojiScore(score);
+};
+
+// old emoji helper removed (we now use recommendationService.getEmojiScore and iconClass mapping)
 </script>
 
 <style>
