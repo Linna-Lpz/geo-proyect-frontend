@@ -29,8 +29,10 @@
     <div class="p-5">
       <!-- Precio y características -->
       <div class="flex justify-between items-center mb-4 pb-4 border-b">
-        <div class="text-2xl font-bold text-blue-600">
-          ${{ propiedad.precio.toLocaleString() }}
+        <div>
+          <div class="text-2xl font-bold text-blue-600">
+            {{ formatearPrecio(propiedad.precio) }}
+          </div>
         </div>
         <div class="flex gap-3 text-sm text-gray-600">
           <span>🛏️ {{ propiedad.dormitorios }}D</span>
@@ -158,6 +160,24 @@ defineEmits<{
   'ver-mapa': [propiedad: PropiedadRecomendadaML]
   'feedback': [data: { propiedad: PropiedadRecomendadaML, tipo: string }]
 }>()
+
+// Valor de la UF en CLP
+const VALOR_UF_CLP = 37500;
+
+const formatearPrecio = (precioUF: number): string => {
+  const precioCLP = precioUF * VALOR_UF_CLP;
+  const ufFormateado = precioUF.toLocaleString('es-CL', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  });
+  const clpFormateado = new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0,
+  }).format(precioCLP);
+  
+  return `${ufFormateado} UF ≈ ${clpFormateado}`;
+};
 
 const getScoreColorText = (score: number): string => {
   if (score >= 80) return 'text-green-600'

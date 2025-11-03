@@ -150,16 +150,68 @@
               />
             </TransitionGroup>
 
-            <!-- Botón cargar más (si hay más propiedades) -->
-            <div
-              v-if="recomendaciones.length >= 10"
-              class="text-center pt-6"
-            >
-              <button
-                class="px-6 py-3 bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
-              >
-                Ver más propiedades →
-              </button>
+            <!-- Paginación -->
+            <div v-if="todasLasRecomendaciones.length > propiedadesPorPagina" class="pt-6">
+              <div class="bg-white rounded-lg border-2 border-gray-200 p-4">
+                <div class="flex items-center justify-between">
+                  <!-- Info de paginación -->
+                  <div class="text-sm text-gray-600">
+                    Mostrando {{ (paginaActual - 1) * propiedadesPorPagina + 1 }} - 
+                    {{ Math.min(paginaActual * propiedadesPorPagina, todasLasRecomendaciones.length) }} 
+                    de {{ todasLasRecomendaciones.length }} propiedades
+                  </div>
+                  
+                  <!-- Controles de paginación -->
+                  <div class="flex items-center gap-2">
+                    <!-- Botón Anterior -->
+                    <button
+                      @click="cambiarPagina(paginaActual - 1)"
+                      :disabled="paginaActual === 1"
+                      :class="[
+                        'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                        paginaActual === 1
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-purple-500 text-white hover:bg-purple-600'
+                      ]"
+                    >
+                      ← Anterior
+                    </button>
+
+                    <!-- Números de página -->
+                    <div class="flex items-center gap-1">
+                      <template v-for="pagina in obtenerPaginasVisibles()" :key="pagina">
+                        <button
+                          v-if="typeof pagina === 'number'"
+                          @click="cambiarPagina(pagina)"
+                          :class="[
+                            'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                            pagina === paginaActual
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ]"
+                        >
+                          {{ pagina }}
+                        </button>
+                        <span v-else class="text-gray-500 px-2">...</span>
+                      </template>
+                    </div>
+
+                    <!-- Botón Siguiente -->
+                    <button
+                      @click="cambiarPagina(paginaActual + 1)"
+                      :disabled="paginaActual === totalPaginas"
+                      :class="[
+                        'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                        paginaActual === totalPaginas
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-purple-500 text-white hover:bg-purple-600'
+                      ]"
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -205,19 +257,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type {
   PreferenciasDetalladasML,
   PropiedadRecomendadaML
 } from '~/services/recommendationMLService'
 import { obtenerRecomendacionesML } from '~/services/recommendationMLService'
 
-const recomendaciones = ref<PropiedadRecomendadaML[]>([])
+const todasLasRecomendaciones = ref<PropiedadRecomendadaML[]>([])
+const paginaActual = ref(1)
+const propiedadesPorPagina = 25
 const metadataML = ref<any>(null)
 const buscandoPropiedades = ref(false)
 const propiedadSeleccionada = ref<PropiedadRecomendadaML | null>(null)
 const showToast = ref(false)
 const toastMessage = ref('')
+
+// Computed: propiedades paginadas
+const recomendaciones = computed(() => {
+  const inicio = (paginaActual.value - 1) * propiedadesPorPagina;
+  const fin = inicio + propiedadesPorPagina;
+  return todasLasRecomendaciones.value.slice(inicio, fin);
+});
+
+// Computed: total de páginas
+const totalPaginas = computed(() => {
+  return Math.ceil(todasLasRecomendaciones.value.length / propiedadesPorPagina);
+});
 
 const propiedadesParaMapa = computed(() => {
   if (!propiedadSeleccionada.value) return []
@@ -226,14 +292,17 @@ const propiedadesParaMapa = computed(() => {
 
 const handlePreferenciasCompletas = async (preferencias: PreferenciasDetalladasML) => {
   buscandoPropiedades.value = true
+  paginaActual.value = 1
+  todasLasRecomendaciones.value = []
   
   try {
-    const response = await obtenerRecomendacionesML(preferencias, 10)
+    // Solicitar TODAS las propiedades
+    const response = await obtenerRecomendacionesML(preferencias, 9999)
     
     // Simular delay para mostrar loading
     await new Promise(resolve => setTimeout(resolve, 1500))
     
-    recomendaciones.value = response.recomendaciones
+    todasLasRecomendaciones.value = response.recomendaciones
     metadataML.value = {
       modelo_version: response.modelo_version,
       total_propiedades_evaluadas: response.total_analizadas,
@@ -248,6 +317,46 @@ const handlePreferenciasCompletas = async (preferencias: PreferenciasDetalladasM
     buscandoPropiedades.value = false
   }
 }
+
+const cambiarPagina = (pagina: number) => {
+  if (pagina >= 1 && pagina <= totalPaginas.value) {
+    paginaActual.value = pagina;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+
+const obtenerPaginasVisibles = (): (number | string)[] => {
+  const total = totalPaginas.value;
+  const actual = paginaActual.value;
+  const paginas: (number | string)[] = [];
+  
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) {
+      paginas.push(i);
+    }
+  } else {
+    paginas.push(1);
+    
+    if (actual > 3) {
+      paginas.push('...');
+    }
+    
+    const inicio = Math.max(2, actual - 1);
+    const fin = Math.min(total - 1, actual + 1);
+    
+    for (let i = inicio; i <= fin; i++) {
+      paginas.push(i);
+    }
+    
+    if (actual < total - 2) {
+      paginas.push('...');
+    }
+    
+    paginas.push(total);
+  }
+  
+  return paginas;
+};
 
 const verPropiedadEnMapa = (propiedad: PropiedadRecomendadaML) => {
   propiedadSeleccionada.value = propiedad

@@ -27,14 +27,14 @@
             <div class="bg-gray-50 border-b border-gray-200 p-4 flex items-center justify-between">
               <div>
                 <h2 class="text-lg font-semibold text-gray-800">
-                  {{ recomendaciones.length > 0 ? '🎯 Propiedades Recomendadas' : '📋 Resultados' }}
+                  {{ todasLasRecomendaciones.length > 0 ? '🎯 Propiedades Recomendadas' : '📋 Resultados' }}
                 </h2>
                 <p v-if="totalAnalizadas > 0" class="text-sm text-gray-600">
-                  {{ recomendaciones.length }} de {{ totalAnalizadas }} propiedades analizadas
+                  {{ todasLasRecomendaciones.length }} propiedades encontradas ({{ totalAnalizadas }} analizadas)
                 </p>
               </div>
               <button
-                v-if="recomendaciones.length > 0"
+                v-if="todasLasRecomendaciones.length > 0"
                 @click="toggleVista"
                 class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
               >
@@ -51,7 +51,7 @@
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="recomendaciones.length === 0" class="flex-1 flex items-center justify-center p-8">
+            <div v-else-if="todasLasRecomendaciones.length === 0" class="flex-1 flex items-center justify-center p-8">
               <div class="text-center text-gray-500">
                 <div class="text-6xl mb-4">🏘️</div>
                 <p class="text-lg font-medium">Completa el chat para ver recomendaciones</p>
@@ -79,7 +79,7 @@
                     </div>
                   </div>
                   <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                    #{{ index + 1 }}
+                    #{{ (paginaActual - 1) * propiedadesPorPagina + index + 1 }}
                   </span>
                 </div>
 
@@ -172,6 +172,68 @@
                 </details>
               </div>
             </div>
+
+            <!-- Paginación -->
+            <div v-if="todasLasRecomendaciones.length > 0" class="bg-gray-50 border-t border-gray-200 p-4">
+              <div class="flex items-center justify-between">
+                <!-- Info de paginación -->
+                <div class="text-sm text-gray-600">
+                  Mostrando {{ (paginaActual - 1) * propiedadesPorPagina + 1 }} - 
+                  {{ Math.min(paginaActual * propiedadesPorPagina, todasLasRecomendaciones.length) }} 
+                  de {{ todasLasRecomendaciones.length }} propiedades
+                </div>
+                
+                <!-- Controles de paginación -->
+                <div class="flex items-center gap-2">
+                  <!-- Botón Anterior -->
+                  <button
+                    @click="cambiarPagina(paginaActual - 1)"
+                    :disabled="paginaActual === 1"
+                    :class="[
+                      'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                      paginaActual === 1
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    ]"
+                  >
+                    ← Anterior
+                  </button>
+
+                  <!-- Números de página -->
+                  <div class="flex items-center gap-1">
+                    <template v-for="pagina in obtenerPaginasVisibles()" :key="pagina">
+                      <button
+                        v-if="typeof pagina === 'number'"
+                        @click="cambiarPagina(pagina)"
+                        :class="[
+                          'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                          pagina === paginaActual
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ]"
+                      >
+                        {{ pagina }}
+                      </button>
+                      <span v-else class="text-gray-500 px-2">...</span>
+                    </template>
+                  </div>
+
+                  <!-- Botón Siguiente -->
+                  <button
+                    @click="cambiarPagina(paginaActual + 1)"
+                    :disabled="paginaActual === totalPaginas"
+                    :class="[
+                      'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                      paginaActual === totalPaginas
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    ]"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Map View -->
@@ -213,25 +275,40 @@ import {
   type PropiedadRecomendada,
 } from '~/services/recommendationService';
 
-const recomendaciones = ref<PropiedadRecomendada[]>([]);
+const todasLasRecomendaciones = ref<PropiedadRecomendada[]>([]);
+const paginaActual = ref(1);
+const propiedadesPorPagina = 25;
 const isLoading = ref(false);
 const totalAnalizadas = ref(0);
 const mostrandoMapa = ref(false);
 const propiedadSeleccionada = ref<PropiedadRecomendada | null>(null);
 
+// Computed: propiedades paginadas
+const recomendaciones = computed(() => {
+  const inicio = (paginaActual.value - 1) * propiedadesPorPagina;
+  const fin = inicio + propiedadesPorPagina;
+  return todasLasRecomendaciones.value.slice(inicio, fin);
+});
+
+// Computed: total de páginas
+const totalPaginas = computed(() => {
+  return Math.ceil(todasLasRecomendaciones.value.length / propiedadesPorPagina);
+});
+
 const handlePreferenciasCompletas = async (preferencias: PreferenciasUsuario) => {
   isLoading.value = true;
-  recomendaciones.value = [];
+  todasLasRecomendaciones.value = [];
+  paginaActual.value = 1;
   totalAnalizadas.value = 0;
 
   try {
-    const response = await recommendationService.obtenerRecomendaciones(preferencias, 10);
+    // Solicitar TODAS las propiedades (límite alto)
+    const response = await recommendationService.obtenerRecomendaciones(preferencias, 9999);
     
-    recomendaciones.value = response.recomendaciones;
+    todasLasRecomendaciones.value = response.recomendaciones;
     totalAnalizadas.value = response.total_analizadas;
     
-    if (recomendaciones.value.length === 0) {
-      // Mostrar mensaje si no hay resultados
+    if (todasLasRecomendaciones.value.length === 0) {
       console.log('No se encontraron propiedades con esos criterios');
     }
   } catch (error) {
@@ -240,6 +317,51 @@ const handlePreferenciasCompletas = async (preferencias: PreferenciasUsuario) =>
   } finally {
     isLoading.value = false;
   }
+};
+
+const cambiarPagina = (pagina: number) => {
+  if (pagina >= 1 && pagina <= totalPaginas.value) {
+    paginaActual.value = pagina;
+    // Scroll al inicio de la lista
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+
+const obtenerPaginasVisibles = (): (number | string)[] => {
+  const total = totalPaginas.value;
+  const actual = paginaActual.value;
+  const paginas: (number | string)[] = [];
+  
+  if (total <= 7) {
+    // Mostrar todas las páginas si hay 7 o menos
+    for (let i = 1; i <= total; i++) {
+      paginas.push(i);
+    }
+  } else {
+    // Siempre mostrar primera página
+    paginas.push(1);
+    
+    if (actual > 3) {
+      paginas.push('...');
+    }
+    
+    // Páginas alrededor de la actual
+    const inicio = Math.max(2, actual - 1);
+    const fin = Math.min(total - 1, actual + 1);
+    
+    for (let i = inicio; i <= fin; i++) {
+      paginas.push(i);
+    }
+    
+    if (actual < total - 2) {
+      paginas.push('...');
+    }
+    
+    // Siempre mostrar última página
+    paginas.push(total);
+  }
+  
+  return paginas;
 };
 
 const toggleVista = () => {
@@ -253,15 +375,15 @@ const seleccionarPropiedad = (propiedad: PropiedadRecomendada) => {
 
 const handlePropertySelected = (property: any) => {
   // Manejar selección desde el mapa
-  const prop = recomendaciones.value.find(p => p.id === property.id);
+  const prop = todasLasRecomendaciones.value.find(p => p.id === property.id);
   if (prop) {
     propiedadSeleccionada.value = prop;
   }
 };
 
-// Convertir recomendaciones a formato compatible con Map
+// Convertir recomendaciones a formato compatible con Map (todas las propiedades)
 const propiedadesParaMapa = computed(() => {
-  return recomendaciones.value.map(rec => ({
+  return todasLasRecomendaciones.value.map(rec => ({
     id: rec.id,
     direccion: rec.direccion,
     latitud: rec.latitud,

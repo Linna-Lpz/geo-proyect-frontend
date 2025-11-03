@@ -67,7 +67,7 @@ export interface PropiedadRecomendada {
   id: number;
   direccion: string;
   comuna: string;
-  precio: number;
+  precio: number; // Precio en UF
   superficie_util: number | null;
   dormitorios: number;
   banos: number;
@@ -129,14 +129,56 @@ class RecommendationService {
   }
 
   /**
-   * Formatea precio a formato chileno
+   * Valor de la UF en CLP (actualizar periódicamente)
+   * Fuente: Banco Central de Chile
    */
-  formatearPrecio(precio: number): string {
+  private readonly VALOR_UF_CLP = 37500;
+
+  /**
+   * Convierte UF a CLP
+   */
+  ufToCLP(uf: number): number {
+    return uf * this.VALOR_UF_CLP;
+  }
+
+  /**
+   * Formatea precio en UF con conversión a CLP
+   */
+  formatearPrecio(precioUF: number): string {
+    const precioCLP = this.ufToCLP(precioUF);
+    const ufFormateado = precioUF.toLocaleString('es-CL', { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    });
+    const clpFormateado = new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+    }).format(precioCLP);
+    
+    return `${ufFormateado} UF (≈${clpFormateado})`;
+  }
+
+  /**
+   * Formatea solo UF
+   */
+  formatearPrecioUF(precioUF: number): string {
+    return `${precioUF.toLocaleString('es-CL', { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    })} UF`;
+  }
+
+  /**
+   * Formatea solo CLP
+   */
+  formatearPrecioCLP(precioUF: number): string {
+    const precioCLP = this.ufToCLP(precioUF);
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
       currency: 'CLP',
       minimumFractionDigits: 0,
-    }).format(precio);
+    }).format(precioCLP);
   }
 
   /**

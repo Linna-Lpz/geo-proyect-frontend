@@ -132,7 +132,7 @@ export interface PropiedadRecomendadaML {
   id: number
   direccion: string
   comuna: string
-  precio: number
+  precio: number  // Precio en UF
   superficie_util: number
   dormitorios: number
   banos: number
@@ -224,4 +224,56 @@ export const getImportanciaColor = (value: number): string => {
   if (value < 0) return 'orange'
   if (value <= 5) return 'blue'
   return 'green'
+}
+
+/**
+ * Valor de la UF en CLP
+ */
+const VALOR_UF_CLP = 37500;
+
+/**
+ * Convierte UF a CLP
+ */
+export const ufToCLP = (uf: number): number => {
+  return uf * VALOR_UF_CLP;
+}
+
+/**
+ * Formatea precio en UF con conversión a CLP
+ */
+export const formatearPrecio = (precioUF: number): string => {
+  const precioCLP = ufToCLP(precioUF);
+  const ufFormateado = precioUF.toLocaleString('es-CL', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  });
+  const clpFormateado = new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0,
+  }).format(precioCLP);
+  
+  return `${ufFormateado} UF (≈${clpFormateado})`;
+}
+
+/**
+ * Formatea solo UF
+ */
+export const formatearPrecioUF = (precioUF: number): string => {
+  return `${precioUF.toLocaleString('es-CL', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  })} UF`;
+}
+
+/**
+ * Formatea solo CLP
+ */
+export const formatearPrecioCLP = (precioUF: number): string => {
+  const precioCLP = ufToCLP(precioUF);
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0,
+  }).format(precioCLP);
 }

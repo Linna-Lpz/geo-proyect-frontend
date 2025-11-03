@@ -386,11 +386,20 @@ const clearSelection = () => {
 };
 
 const formatearPrecio = (precio: number): string => {
-  return new Intl.NumberFormat('es-CL', {
+  // Precio está en UF, convertir a CLP para visualización
+  const VALOR_UF_CLP = 37500;
+  const precioCLP = precio * VALOR_UF_CLP;
+  const ufFormateado = precio.toLocaleString('es-CL', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  });
+  const clpFormateado = new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     minimumFractionDigits: 0,
-  }).format(precio);
+  }).format(precioCLP);
+  
+  return `${ufFormateado} UF (≈${clpFormateado})`;
 };
 
 const getColorScore = (score: number): string => {
