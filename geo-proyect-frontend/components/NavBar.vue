@@ -1,27 +1,22 @@
 <template>
   <nav class="bg-white shadow-lg">
-    <div class="container mx-auto px-4">
+    <div class="px-4">
       <div class="flex justify-between items-center py-4">
         <!-- Logo -->
         <NuxtLink to="/" class="flex items-center space-x-2">
           <span class="text-2xl"><i class="pi pi-home"></i></span>
-          <span class="text-xl font-bold text-gray-800">GeoInmobiliaria</span>
+          <span class="text-xl font-bold text-gray-800">TerraMatch</span>
         </NuxtLink>
 
         <!-- Navegación -->
         <div class="hidden md:flex space-x-6">
           <NuxtLink 
-            to="/" 
-            class="text-gray-700 hover:text-blue-600 font-medium transition-colors"
-          >
-            Inicio
-          </NuxtLink>
-          <NuxtLink 
-            to="/recomendacionesML" 
+            :to="navTo"
             class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
+            @click="mobileMenuOpen = false"
           >
-            <i class="pi pi-star mr-1"></i>
-            Recomendaciones ML
+            <i :class="navIcon" class="mr-1"></i>
+            {{ navLabel }}
           </NuxtLink>
         </div>
 
@@ -46,11 +41,12 @@
           Inicio
         </NuxtLink>
         <NuxtLink 
-          to="/recomendacionesML" 
-          class="block py-2 text-gray-700 hover:text-blue-600 font-medium"
+          :to="navTo"
+          class="block py-2 text-gray-700 hover:text-blue-600 font-medium flex items-center"
           @click="mobileMenuOpen = false"
         >
-          <i class="pi pi-star mr-1"></i> Recomendaciones ML
+          <i :class="navIcon" class="mr-1"></i>
+          {{ navLabel }}
         </NuxtLink>
       </div>
     </div>
@@ -58,7 +54,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-const mobileMenuOpen = ref(false);
+const mobileMenuOpen = ref(false)
+const route = useRoute()
+
+const isOnRecomendaciones = computed(() => {
+  // Ajusta la comparación si tu ruta tiene nombre distinto
+  return route.path === '/recomendacionesML' || route.name === 'recomendacionesML'
+})
+
+const navTo = computed(() => isOnRecomendaciones.value ? '/' : '/recomendacionesML')
+const navLabel = computed(() => isOnRecomendaciones.value ? 'Volver al inicio' : 'Recomendaciones ML')
+const navIcon = computed(() => isOnRecomendaciones.value ? 'pi pi-arrow-left' : 'pi pi-star')
 </script>

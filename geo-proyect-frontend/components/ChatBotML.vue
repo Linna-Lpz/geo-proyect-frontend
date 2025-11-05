@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full bg-gray-50">
     <!-- Chat Messages Area -->
-    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
       <div
         v-for="(message, index) in messages"
         :key="index"
@@ -12,7 +12,7 @@
       >
         <div
           :class="[
-            'max-w-[80%] rounded-lg p-4 shadow-sm',
+            'max-w-[80%] rounded-lg p-3 shadow-sm',
             message.sender === 'bot'
               ? 'bg-white border border-gray-200'
               : 'bg-blue-500 text-white'
@@ -44,6 +44,7 @@
                   v-for="(option, optIndex) in message.options"
                   :key="optIndex"
                   @click="handleOptionClick(option)"
+                  :disabled="option.action === 'start' && searchStarted"
                   class="w-full text-left px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium text-blue-700"
                 >
                   {{ option.label }}
@@ -94,14 +95,14 @@
                   @click="submitSlider(message.sliderAction)"
                   class="w-full mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
                 >
-                  Continuar →
+                  Continuar
                 </button>
               </div>
             </div>
 
             <div
               v-if="message.sender === 'user'"
-              class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm"
+              class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm"
             >
               <i class="pi pi-user"></i>
             </div>
@@ -122,13 +123,14 @@
     </div>
 
     <!-- Quick Actions (Bottom) -->
-    <div v-if="showQuickActions" class="p-4 bg-white border-t border-gray-200">
+    <div v-if="showQuickActions" class="sticky bottom-0 p-4 bg-white border-t border-gray-200 shadow-md flex justify-end">
       <div class="flex gap-2 flex-wrap">
         <button
           @click="resetChat"
-          class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-bold"
         >
-          <i class="pi pi-refresh mr-1"></i> Reiniciar
+          <i class="pi pi-refresh mr-1"></i> 
+          Reiniciar
         </button>
         <button
           v-if="preferencias.precio_min"
@@ -197,6 +199,8 @@ const temasSeleccionados = ref<string[]>([]);
 // Slider temporal state
 const currentSliderValue = ref(0);
 
+const searchStarted = ref(false);
+
 const preferencias = ref<Partial<PreferenciasTemp>>({
   prioridad_precio: 5,
   prioridad_ubicacion: 5,
@@ -258,6 +262,7 @@ const handleOptionClick = (option: { label: string; value: any; action: string }
   
   switch (option.action) {
     case 'start':
+      searchStarted.value = true;
       preguntarPresupuesto();
       break;
     case 'buscar':
@@ -965,6 +970,7 @@ const resetChat = () => {
   temasSeleccionados.value = [];
   tempMultiSelectValues.value = [];
   indiceTemaActual = 0;
+  searchStarted.value = false;
   iniciarConversacion();
 };
 

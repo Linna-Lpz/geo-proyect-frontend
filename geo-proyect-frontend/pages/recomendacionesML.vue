@@ -1,27 +1,5 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-    <!-- Header -->
-    <div class="bg-white shadow-sm border-b sticky top-0 z-10">
-      <div class="container mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
-          <div>
-              <h1 class="text-2xl font-bold text-gray-800">
-              <i class="pi pi-home mr-2"></i>Recomendaciones Inteligentes ML
-            </h1>
-            <p class="text-sm text-gray-500 mt-1">
-              Encuentra tu propiedad ideal con inteligencia artificial
-            </p>
-          </div>
-          <NuxtLink
-            to="/"
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-          >
-            Volver al inicio
-          </NuxtLink>
-        </div>
-      </div>
-    </div>
-
     <div class="container mx-auto p-4 lg:p-6">
       <!-- Layout: 2 columnas en desktop, 1 en mobile -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

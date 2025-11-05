@@ -1,12 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <NavBar />
-    
+  <div class="bg-gradient-to-br from-blue-50 to-indigo-100">
     <div class="container mx-auto px-4 py-16">
       <!-- Hero Section -->
       <div class="text-center mb-16">
         <h1 class="text-5xl font-bold text-gray-800 mb-4">
-          <i class="pi pi-home mr-2"></i>GeoInmobiliaria
+          <i class="pi pi-home mr-2"></i>TerraMatch
         </h1>
         <p class="text-xl text-gray-600 mb-8">
           Sistema inteligente de recomendaciones inmobiliarias con Machine Learning
