@@ -98,6 +98,48 @@
                   Continuar
                 </button>
               </div>
+
+              <!-- Range Input (Presupuesto) -->
+              <div v-if="message.requiresRangeInput && message.rangeInputConfig" class="mt-3 space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ message.rangeInputConfig.minLabel }}
+                  </label>
+                  <input
+                    v-model.number="tempRangeMin"
+                    type="number"
+                    :min="message.rangeInputConfig.minValue"
+                    :placeholder="message.rangeInputConfig.minPlaceholder"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ message.rangeInputConfig.maxLabel }}
+                  </label>
+                  <input
+                    v-model.number="tempRangeMax"
+                    type="number"
+                    :min="tempRangeMin || message.rangeInputConfig.minValue"
+                    :placeholder="message.rangeInputConfig.maxPlaceholder"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div
+                  v-if="tempRangeMin && tempRangeMax"
+                  class="text-xs text-gray-600 bg-blue-50 p-2 rounded"
+                >
+                  <i class="pi pi-info-circle mr-1"></i>
+                  Rango: ${{ tempRangeMin.toLocaleString() }} - ${{ tempRangeMax.toLocaleString() }}
+                </div>
+                <button
+                  @click="submitRangeInput(message.rangeInputConfig.action)"
+                  :disabled="!tempRangeMin || !tempRangeMax"
+                  class="w-full mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Continuar
+                </button>
+              </div>
             </div>
 
             <div
@@ -159,6 +201,15 @@ interface ChatMessage {
   sliderLabel?: string;
   sliderHelp?: string;
   sliderAction?: string;
+  requiresRangeInput?: boolean;
+  rangeInputConfig?: {
+    minLabel: string;
+    maxLabel: string;
+    minPlaceholder: string;
+    maxPlaceholder: string;
+    minValue: number;
+    action: string;
+  };
 }
 
 // Interfaz temporal para recolectar datos del usuario
@@ -198,6 +249,10 @@ const temasSeleccionados = ref<string[]>([]);
 
 // Slider temporal state
 const currentSliderValue = ref(0);
+
+// Range input temporal state
+const tempRangeMin = ref<number>(1);
+const tempRangeMax = ref<number>(1000000);
 
 const searchStarted = ref(false);
 
@@ -383,6 +438,43 @@ const submitSlider = (action?: string) => {
   currentSliderValue.value = 0;
 };
 
+// Submit range input (presupuesto)
+const submitRangeInput = (action?: string) => {
+  if (!action) return;
+  
+  const min = tempRangeMin.value;
+  const max = tempRangeMax.value;
+  
+  // Validaciones
+  if (!min || !max) {
+    alert('Por favor ingresa ambos valores (mínimo y máximo)');
+    return;
+  }
+  
+  if (min < 1) {
+    alert('El precio mínimo debe ser al menos $1');
+    return;
+  }
+  
+  if (max <= min) {
+    alert('El precio máximo debe ser mayor al precio mínimo');
+    return;
+  }
+  
+  // Mostrar mensaje del usuario con el rango seleccionado
+  const mensaje = `Presupuesto: $${min.toLocaleString()} - $${max.toLocaleString()}`;
+  addUserMessage(mensaje);
+  
+  // Ejecutar acción según el tipo
+  if (action === 'presupuesto') {
+    handlePresupuestoResponse({ min, max });
+  }
+  
+  // Resetear valores
+  tempRangeMin.value = 1;
+  tempRangeMax.value = 1000000;
+};
+
 // Helper para etiquetas de importancia
 const getImportanceLabel = (value: number): string => {
   if (value <= -8) return 'Evitar completamente';
@@ -402,17 +494,39 @@ const getImportanceLabel = (value: number): string => {
 const preguntarPresupuesto = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-money-bill mr-1"></i> ¿Cuál es tu presupuesto?</p><p class="text-sm text-gray-600">Pregunta obligatoria (1/4)</p>',
-    options: [
-      { label: 'Hasta $300.000', value: { min: 0, max: 300000 }, action: 'presupuesto' },
-      { label: '$300.000 - $500.000', value: { min: 300000, max: 500000 }, action: 'presupuesto' },
-      { label: '$500.000 - $800.000', value: { min: 500000, max: 800000 }, action: 'presupuesto' },
-      { label: 'Más de $800.000', value: { min: 800000, max: 2000000 }, action: 'presupuesto' },
-    ],
+    text: '<p class="font-semibold"><i class="pi pi-money-bill mr-1"></i> ¿Cuál es tu presupuesto?</p><p class="text-sm text-gray-600">Pregunta obligatoria (1/4) - Define el rango mínimo y máximo</p>',
+    requiresRangeInput: true,
+    rangeInputConfig: {
+      minLabel: 'Precio Mínimo (CLP)',
+      maxLabel: 'Precio Máximo (CLP)',
+      minPlaceholder: '100.000',
+      maxPlaceholder: '1.000.000',
+      minValue: 1,
+      action: 'presupuesto'
+    }
   });
 };
 
 const handlePresupuestoResponse = (value: { min: number; max: number }) => {
+  // Validar que min sea al menos 1 y que max sea mayor que min
+  if (value.min < 1) {
+    addMessage({
+      sender: 'bot',
+      text: '<p class="text-red-600">⚠️ El precio mínimo debe ser al menos $1</p>',
+    });
+    preguntarPresupuesto();
+    return;
+  }
+  
+  if (value.max <= value.min) {
+    addMessage({
+      sender: 'bot',
+      text: '<p class="text-red-600">⚠️ El precio máximo debe ser mayor que el precio mínimo</p>',
+    });
+    preguntarPresupuesto();
+    return;
+  }
+  
   preferencias.value.precio_min = value.min;
   preferencias.value.precio_max = value.max;
   preguntarDormitorios();

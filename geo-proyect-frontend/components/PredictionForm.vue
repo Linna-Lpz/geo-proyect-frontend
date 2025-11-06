@@ -1,16 +1,15 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+  <div class="bg-white rounded-lg shadow-lg p-6 max-w-3xl mx-auto">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Predecir Precio de Propiedad</h2>
     
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <!-- Características Básicas -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Superficie (m²) *
           </label>
           <input
-            v-model.number="formData.superficie"
+            v-model.number="formData.superficie_util"
             type="number"
             min="20"
             max="500"
@@ -50,194 +49,91 @@
         </div>
       </div>
 
-      <!-- Comuna -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">
-          Comuna *
-        </label>
-        <select
-          v-model="formData.comuna"
-          required
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="" disabled>Seleccionar comuna</option>
-          <option v-for="comuna in comunas" :key="comuna.nombre" :value="comuna.nombre">
-            {{ comuna.nombre }}
-          </option>
-        </select>
-      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Latitud *
+          </label>
+          <input
+            v-model.number="formData.latitud"
+            type="number"
+            step="0.0001"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="-33.4489"
+          />
+        </div>
 
-      <!-- Distancias (Opcionales) -->
-      <div class="border-t pt-4">
-        <button
-          type="button"
-          @click="showDistances = !showDistances"
-          class="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-3"
-        >
-          <svg 
-            class="w-5 h-5 mr-2 transition-transform" 
-            :class="{ 'rotate-90': showDistances }"
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-          Distancias (Opcional)
-        </button>
-
-        <div v-if="showDistances" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Metro/Transporte (km)
-            </label>
-            <input
-              v-model.number="formData.dist_metro"
-              type="number"
-              min="0"
-              max="20"
-              step="0.1"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="0.5"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Áreas Verdes (km)
-            </label>
-            <input
-              v-model.number="formData.dist_area_verde"
-              type="number"
-              min="0"
-              max="20"
-              step="0.1"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="0.8"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Hospital (km)
-            </label>
-            <input
-              v-model.number="formData.dist_hospital"
-              type="number"
-              min="0"
-              max="20"
-              step="0.1"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="1.2"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Colegio (km)
-            </label>
-            <input
-              v-model.number="formData.dist_colegio"
-              type="number"
-              min="0"
-              max="20"
-              step="0.1"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="0.6"
-            />
-          </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Longitud *
+          </label>
+          <input
+            v-model.number="formData.longitud"
+            type="number"
+            step="0.0001"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="-70.6693"
+          />
         </div>
       </div>
 
-      <!-- Botones -->
-      <div class="flex gap-3 pt-4">
+      <div class="flex gap-4">
         <button
           type="submit"
           :disabled="loading"
-          class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          <span v-if="!loading"><i class="pi pi-search mr-2"></i>Predecir Precio</span>
-          <span v-else class="flex items-center justify-center">
-            <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-            </svg>
-            Calculando...
-          </span>
+          <span v-if="!loading">Predecir Precio</span>
+          <span v-else>Procesando...</span>
         </button>
+      </div>
 
-        <button
-          type="button"
-          @click="resetForm"
-          class="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Limpiar
-        </button>
+      <div
+        v-if="error"
+        class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+      >
+        {{ error }}
       </div>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { predictionService, type PrediccionRequest, type Comuna } from '~/services/predictionService';
+import { ref } from 'vue';
+import { predictionService, type PrediccionRequest } from '~/services/predictionService';
 
 const emit = defineEmits<{
-  (e: 'prediction', value: any): void;
+  (e: 'prediction-success', data: any): void;
 }>();
 
-const loading = ref(false);
-const showDistances = ref(false);
-const comunas = ref<Comuna[]>([]);
-
-const formData = ref<PrediccionRequest>({
-  superficie: 85,
-  dormitorios: 2,
+const formData = ref({
+  superficie_util: 85,
+  dormitorios: 3,
   banos: 2,
-  comuna: '',
-  dist_metro: undefined,
-  dist_supermercado: undefined,
-  dist_area_verde: undefined,
-  dist_colegio: undefined,
-  dist_hospital: undefined,
-  dist_mall: undefined,
+  estacionamientos: 0,
+  bodegas: 0,
+  latitud: -33.4489,
+  longitud: -70.6693,
+  usar_stacking: true
 });
 
-onMounted(async () => {
-  try {
-    comunas.value = await predictionService.getComunas();
-  } catch (error) {
-    console.error('Error cargando comunas:', error);
-  }
-});
+const loading = ref(false);
+const error = ref('');
 
 const handleSubmit = async () => {
-  loading.value = true;
-  
   try {
-    const result = await predictionService.predecirPrecio(formData.value);
-    emit('prediction', result);
-  } catch (error: any) {
-    console.error('Error en predicción:', error);
-    alert(`Error: ${error.message}`);
+    loading.value = true;
+    error.value = '';
+
+    const response = await predictionService.predecirPrecio(formData.value as PrediccionRequest);
+    emit('prediction-success', response);
+
+  } catch (err: any) {
+    error.value = err.response?.data?.detail || 'Error al procesar la predicción';
   } finally {
     loading.value = false;
   }
-};
-
-const resetForm = () => {
-  formData.value = {
-    superficie: 85,
-    dormitorios: 2,
-    banos: 2,
-    comuna: '',
-    dist_metro: undefined,
-    dist_supermercado: undefined,
-    dist_area_verde: undefined,
-    dist_colegio: undefined,
-    dist_hospital: undefined,
-    dist_mall: undefined,
-  };
-  showDistances.value = false;
 };
 </script>
