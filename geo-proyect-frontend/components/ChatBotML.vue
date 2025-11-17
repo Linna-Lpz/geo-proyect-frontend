@@ -667,10 +667,10 @@ const finalizarConversacion = () => {
     
     // Construir resumen dinámico
     const resumenItems: string[] = [
-      `<p><i class="pi pi-money-bill mr-1"></i> Presupuesto: $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
-      `<p><strong>Dormitorios:</strong> ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
-      `<p><i class="pi pi-home mr-1"></i> Tipo: ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
-      `<p><i class="pi pi-map-marker mr-1"></i> Zona: ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
+      `<p><CurrencyDollarIcon class="inline-block mr-1" /> Presupuesto: $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
+      `<p><HomeIcon class="inline-block mr-1" /> Dormitorios: ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
+      `<p><HomeIcon class="inline-block mr-1" /> Tipo: ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
+      `<p><MapPinIcon class="inline-block mr-1" /> Zona: ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
     ];
     
     if (temasSeleccionados.value.length > 0) {
@@ -678,24 +678,24 @@ const finalizarConversacion = () => {
       
       if (temasSeleccionados.value.includes('transporte')) {
         const texto = preferencias.value.evitar_metro ? 'Prefiere LEJOS del metro' : `Prioridad: ${preferencias.value.prioridad_transporte}/10`;
-  resumenItems.push(`<p><i class="pi pi-train mr-1"></i> Transporte: ${texto}</p>`);
+  resumenItems.push(`<p><TrainIcon class="inline-block mr-1" /> Transporte: ${texto}</p>`);
       }
       if (temasSeleccionados.value.includes('educacion')) {
         const texto = preferencias.value.evitar_colegios ? 'Prefiere LEJOS de colegios' : `Prioridad: ${preferencias.value.prioridad_educacion}/10`;
-  resumenItems.push(`<p><i class="pi pi-book mr-1"></i> Educación: ${texto}</p>`);
+  resumenItems.push(`<p><BookIcon class="inline-block mr-1" /> Educación: ${texto}</p>`);
       }
       if (temasSeleccionados.value.includes('salud')) {
         const texto = preferencias.value.evitar_hospitales ? 'Prefiere LEJOS de hospitales' : `Prioridad: ${preferencias.value.prioridad_salud}/10`;
-  resumenItems.push(`<p><i class="pi pi-hospital mr-1"></i> Salud: ${texto}</p>`);
+  resumenItems.push(`<p><HospitalIcon class="inline-block mr-1" /> Salud: ${texto}</p>`);
       }
       if (temasSeleccionados.value.includes('areas_verdes')) {
-  resumenItems.push(`<p><i class="pi pi-tree mr-1"></i> Áreas Verdes: Prioridad ${preferencias.value.prioridad_areas_verdes}/10</p>`);
+  resumenItems.push(`<p><TreeIcon class="inline-block mr-1" /> Áreas Verdes: Prioridad ${preferencias.value.prioridad_areas_verdes}/10</p>`);
       }
       if (temasSeleccionados.value.includes('edificio')) {
-  resumenItems.push(`<p><i class="pi pi-car mr-1"></i> Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
+  resumenItems.push(`<p><CarIcon class="inline-block mr-1" /> Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
       }
       if (temasSeleccionados.value.includes('ambiente')) {
-  resumenItems.push(`<p><i class="pi pi-bell mr-1"></i> Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);
+  resumenItems.push(`<p><BellIcon class="inline-block mr-1" /> Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);
       }
     }
     

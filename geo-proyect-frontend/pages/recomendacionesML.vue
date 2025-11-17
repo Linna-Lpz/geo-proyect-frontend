@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-    <div class="container mx-auto p-4 lg:p-6">
+  <div class="min-h-screen">
+    <div class="w-full p-4">
       <!-- Layout: 2 columnas en desktop, 1 en mobile -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-2 gap-6 ml-6 mr-6">
         
         <!-- Columna Izquierda: Chatbot -->
-        <div class="lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)]">
+        <div class="relative lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)]">
           <div class="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
             <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4">
               <h2 class="text-xl font-bold flex items-center gap-2">
@@ -24,203 +24,121 @@
           </div>
         </div>
 
-        <!-- Columna Derecha: Resultados -->
-        <div class="space-y-6">
-          <!-- Estado: Sin buscar -->
-          <div
-            v-if="!buscandoPropiedades && recomendaciones.length === 0"
-            class="bg-white rounded-xl shadow-lg p-12 text-center"
-          >
-            <div class="text-6xl mb-4"><i class="pi pi-home text-6xl"></i></div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">
-              ¿Listo para encontrar tu hogar ideal?
-            </h3>
-            <p class="text-gray-600">
-              Completa la configuración en el asistente de la izquierda
-              y te mostraremos las mejores opciones personalizadas para ti.
-            </p>
-            <div class="mt-8 grid grid-cols-2 gap-4 text-sm">
-              <div class="p-4 bg-blue-50 rounded-lg">
-                <div class="text-2xl mb-2"><i class="pi pi-check text-green-600"></i></div>
-                <div class="font-medium">Define lo que QUIERES</div>
-                <div class="text-gray-600 text-xs mt-1">Valores positivos (+1 a +10)</div>
-              </div>
-              <div class="p-4 bg-red-50 rounded-lg">
-                <div class="text-2xl mb-2"><i class="pi pi-times text-red-600"></i></div>
-                <div class="font-medium">Define lo que EVITAS</div>
-                <div class="text-gray-600 text-xs mt-1">Valores negativos (-1 a -10)</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Estado: Buscando -->
-          <div
-            v-if="buscandoPropiedades"
-            class="bg-white rounded-xl shadow-lg p-12"
-          >
-            <div class="flex flex-col items-center justify-center">
-              <div class="relative w-20 h-20 mb-6">
-                <div class="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-              </div>
-              <h3 class="text-xl font-bold text-gray-800 mb-2">
-                <i class="pi pi-search mr-2"></i>Analizando propiedades...
-              </h3>
-              <p class="text-gray-600 text-center">
-                Nuestro modelo de inteligencia artificial está evaluando
-                todas las propiedades según tus preferencias.
-              </p>
-              <div class="mt-6 flex gap-2">
-                <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Estado: Resultados -->
-          <div v-if="!buscandoPropiedades && recomendaciones.length > 0">
-            <!-- Header de resultados -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-xl font-bold text-gray-800">
-                    <i class="pi pi-star mr-2"></i>{{ recomendaciones.length }} Propiedades Encontradas
-                  </h3>
-                  <p class="text-sm text-gray-600 mt-1">
-                    Ordenadas por mejor coincidencia con tus preferencias
-                  </p>
-                </div>
-                <button
-                  @click="nuevaBusqueda"
-                  class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  <i class="pi pi-refresh mr-2"></i> Nueva Búsqueda
-                </button>
-              </div>
-
-              <!-- Metadata del modelo -->
-              <div
-                v-if="metadataML"
-                class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100"
-              >
-                <div class="flex items-start gap-2">
-                  <span class="text-blue-600"><i class="pi pi-info-circle"></i></span>
-                  <div class="flex-1 text-xs text-gray-700">
-                    <strong>Modelo:</strong> {{ metadataML.modelo_version }} •
-                    <strong>Procesado:</strong> {{ metadataML.total_propiedades_evaluadas }} propiedades •
-                    <strong>Tiempo:</strong> {{ metadataML.tiempo_procesamiento_ms }}ms
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Lista de propiedades -->
-            <TransitionGroup name="list" tag="div" class="space-y-6">
-              <PropiedadCardML
-                v-for="(propiedad, index) in recomendaciones"
-                :key="propiedad.id"
-                :propiedad="propiedad"
-                @ver-mapa="verPropiedadEnMapa"
-                @feedback="handleFeedback"
-                :style="{ '--delay': `${index * 50}ms` }"
-                class="animate-fade-in"
-              />
-            </TransitionGroup>
-
-            <!-- Paginación -->
-            <div v-if="todasLasRecomendaciones.length > propiedadesPorPagina" class="pt-6">
-              <div class="bg-white rounded-lg border-2 border-gray-200 p-4">
-                <div class="flex items-center justify-between">
-                  <!-- Info de paginación -->
-                  <div class="text-sm text-gray-600">
-                    Mostrando {{ (paginaActual - 1) * propiedadesPorPagina + 1 }} - 
-                    {{ Math.min(paginaActual * propiedadesPorPagina, todasLasRecomendaciones.length) }} 
-                    de {{ todasLasRecomendaciones.length }} propiedades
-                  </div>
-                  
-                  <!-- Controles de paginación -->
-                  <div class="flex items-center gap-2">
-                    <!-- Botón Anterior -->
-                    <button
-                      @click="cambiarPagina(paginaActual - 1)"
-                      :disabled="paginaActual === 1"
-                      :class="[
-                        'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
-                        paginaActual === 1
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                          : 'bg-purple-500 text-white hover:bg-purple-600'
-                      ]"
-                    >
-                      ← Anterior
-                    </button>
-
-                    <!-- Números de página -->
-                    <div class="flex items-center gap-1">
-                      <template v-for="pagina in obtenerPaginasVisibles()" :key="pagina">
-                        <button
-                          v-if="typeof pagina === 'number'"
-                          @click="cambiarPagina(pagina)"
-                          :class="[
-                            'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
-                            pagina === paginaActual
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          ]"
-                        >
-                          {{ pagina }}
-                        </button>
-                        <span v-else class="text-gray-500 px-2">...</span>
-                      </template>
-                    </div>
-
-                    <!-- Botón Siguiente -->
-                    <button
-                      @click="cambiarPagina(paginaActual + 1)"
-                      :disabled="paginaActual === totalPaginas"
-                      :class="[
-                        'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
-                        paginaActual === totalPaginas
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                          : 'bg-purple-500 text-white hover:bg-purple-600'
-                      ]"
-                    >
-                      Siguiente →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mapa (si hay propiedades seleccionadas) -->
-          <div
-            v-if="propiedadSeleccionada"
-            class="bg-white rounded-xl shadow-lg overflow-hidden"
-          >
-            <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-4 flex items-center justify-between">
+        <!-- Columna Derecha: Resultados + Mapa -->
+        <div class="relative lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] flex flex-col">
+          <div v-if="!buscandoPropiedades && todasLasRecomendaciones.length > 0" class="space-y-6 flex-1 flex flex-col">
+            <div class="bg-white rounded-xl shadow-lg p-6 flex items-center justify-between">
               <div>
-                <h3 class="text-lg font-bold"><i class="pi pi-map-marker mr-2"></i>Ubicación</h3>
-                <p class="text-sm text-purple-100">{{ propiedadSeleccionada.direccion }}</p>
+                <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                  <i class="pi pi-map-marker mr-2"></i>{{ todasLasRecomendaciones.length }} Propiedades en el Mapa
+                </h3>
               </div>
               <button
-                @click="propiedadSeleccionada = null"
-                class="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
+                @click="nuevaBusqueda"
+                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
               >
-                Cerrar
+                <i class="pi pi-refresh mr-2"></i> Nueva Búsqueda
               </button>
             </div>
-            
-            <div class="h-96">
-              <Map
-                v-if="propiedadesParaMapa.length > 0"
-                :propiedades="propiedadesParaMapa"
-              />
+
+            <!-- Tarjeta de información de propiedad (fija, siempre presente) -->
+            <div class="bg-white rounded-xl shadow-lg p-6 relative">
+              <button
+                v-if="propiedadSeleccionada"
+                @click="propiedadSeleccionada = null"
+                class="absolute top-4 right-4 mb-8 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XMarkIcon class="h-6 w-6" />
+              </button>
+
+              <div v-if="propiedadSeleccionada" class="space-y-4">
+                <!-- Encabezado -->
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex items-start gap-3">
+                    <div>
+                      <p class="text-gray-900"><strong>Dirección:</strong> {{ propiedadSeleccionada.direccion }}</p>
+                      <p class="text-gray-900 mt-1"><strong>Comuna:</strong> {{ propiedadSeleccionada.comuna }}</p>
+                      <p class="mt-1"><strong>Precio estimado:</strong> {{ formatearPrecio(propiedadSeleccionada.precio) }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Atributos -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center gap-2">
+                    <i class="pi pi-home text-gray-500"></i>
+                    <div>
+                      <div class="text-xs text-gray-500">Dormitorios</div>
+                      <div class="font-semibold text-gray-800">{{ propiedadSeleccionada.dormitorios }}</div>
+                    </div>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center gap-2">
+                    <i class="pi pi-stop text-gray-500"></i>
+                    <div>
+                      <div class="text-xs text-gray-500">Baños</div>
+                      <div class="font-semibold text-gray-800">{{ propiedadSeleccionada.banos }}</div>
+                    </div>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center gap-2">
+                    <i class="pi pi-arrows-h text-gray-500"></i>
+                    <div>
+                      <div class="text-xs text-gray-500">Superficie útil</div>
+                      <div class="font-semibold text-gray-800">{{ propiedadSeleccionada.superficie_util }} m²</div>
+                    </div>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center gap-2" v-if="propiedadSeleccionada.score_total">
+                    <i :class="[getScoreIcon(propiedadSeleccionada.score_total), getScoreColor(propiedadSeleccionada.score_total)]"></i>
+                    <div>
+                      <div class="text-xs text-gray-500">Compatibilidad</div>
+                      <div :class="['font-semibold', getScoreColor(propiedadSeleccionada.score_total)]">{{ propiedadSeleccionada.score_total.toFixed(1) }}/100</div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Detalles adicionales -->
+                <div>
+                  <button
+                    class="text-sm hover:underline flex justify-end"
+                    @click="verMasDetalles"
+                  >
+                    Ver más detalles
+                  </button>
+                </div>
+              </div>
+
+              <div v-else class="text-center text-gray-600">
+                <i class="pi pi-info-circle text-4xl mb-3"></i>
+                <p>Haz clic en un marcador del mapa para ver los detalles de la propiedad.</p>
+              </div>
+            </div>
+
+            <!-- Mapa -->
+            <div class="relative bg-white rounded-xl shadow-lg overflow-visible flex-1 min-h-[320px]">
+              <div class="h-full">
+                <Map
+                  class="h-full w-full"
+                  :propiedades="propiedadesMapa"
+                  :selected-property="propiedadSeleccionadaParaMapa"
+                  @property-selected="onPropertySelected"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="buscandoPropiedades" class="bg-white rounded-xl shadow-lg p-6 text-center flex-1 flex items-center justify-center">
+            <p class="text-gray-600">Buscando propiedades...</p>
+          </div>
+
+          <div v-else class="bg-white rounded-xl shadow-lg p-6 text-center flex-1 flex items-center justify-center">
+            <div>
+              <h3 class="text-lg font-bold">Inicia una búsqueda</h3>
+              <p class="text-gray-600">Utiliza el Chatbot ML para buscar propiedades.</p>
             </div>
           </div>
         </div>
+
+        <!-- Columna derecha (mantener para alineación) -->
+        <div></div>
       </div>
-    </div>
 
     <!-- Toast notifications -->
     <Teleport to="body">
@@ -232,6 +150,7 @@
       </div>
     </Teleport>
   </div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -241,6 +160,8 @@ import type {
   PropiedadRecomendadaML
 } from '~/services/recommendationMLService'
 import { obtenerRecomendacionesML } from '~/services/recommendationMLService'
+import Map from '~/components/Map.vue'
+import { XMarkIcon } from '@heroicons/vue/16/solid'
 
 const todasLasRecomendaciones = ref<PropiedadRecomendadaML[]>([])
 const paginaActual = ref(1)
@@ -263,9 +184,36 @@ const totalPaginas = computed(() => {
   return Math.ceil(todasLasRecomendaciones.value.length / propiedadesPorPagina);
 });
 
-const propiedadesParaMapa = computed(() => {
-  if (!propiedadSeleccionada.value) return []
-  return [propiedadSeleccionada.value]
+// Todas las propiedades para el mapa (incluye score_total adaptado a "score")
+const propiedadesMapa = computed(() => {
+  return todasLasRecomendaciones.value.map(p => ({
+    id: p.id,
+    direccion: p.direccion,
+    latitud: p.latitud,
+    longitud: p.longitud,
+    precio: p.precio,
+    dormitorios: p.dormitorios,
+    banos: p.banos,
+    comuna: p.comuna,
+    score: p.score_total // El componente Map espera 'score'
+  }))
+})
+
+// Propiedad seleccionada adaptada para el mapa (incluye 'score')
+const propiedadSeleccionadaParaMapa = computed(() => {
+  const p = propiedadSeleccionada.value
+  if (!p) return null
+  return {
+    id: p.id,
+    direccion: p.direccion,
+    latitud: p.latitud,
+    longitud: p.longitud,
+    precio: p.precio,
+    dormitorios: p.dormitorios,
+    banos: p.banos,
+    comuna: p.comuna,
+    score: p.score_total
+  }
 })
 
 const handlePreferenciasCompletas = async (preferencias: PreferenciasDetalladasML) => {
@@ -290,62 +238,18 @@ const handlePreferenciasCompletas = async (preferencias: PreferenciasDetalladasM
     mostrarToast(`${response.recomendaciones.length} propiedades encontradas`)
   } catch (error) {
     console.error('Error obteniendo recomendaciones:', error)
-    mostrarToast('Error al buscar propiedades')
   } finally {
     buscandoPropiedades.value = false
   }
 }
 
-const cambiarPagina = (pagina: number) => {
-  if (pagina >= 1 && pagina <= totalPaginas.value) {
-    paginaActual.value = pagina;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+// Selección desde el mapa (emisión de Map.vue)
+const onPropertySelected = (propiedad: any) => {
+  // Cuando el usuario hace clic en un marcador desde el mapa
+  const encontrada = todasLasRecomendaciones.value.find(p => p.id === propiedad.id)
+  if (encontrada) {
+    propiedadSeleccionada.value = encontrada
   }
-};
-
-const obtenerPaginasVisibles = (): (number | string)[] => {
-  const total = totalPaginas.value;
-  const actual = paginaActual.value;
-  const paginas: (number | string)[] = [];
-  
-  if (total <= 7) {
-    for (let i = 1; i <= total; i++) {
-      paginas.push(i);
-    }
-  } else {
-    paginas.push(1);
-    
-    if (actual > 3) {
-      paginas.push('...');
-    }
-    
-    const inicio = Math.max(2, actual - 1);
-    const fin = Math.min(total - 1, actual + 1);
-    
-    for (let i = inicio; i <= fin; i++) {
-      paginas.push(i);
-    }
-    
-    if (actual < total - 2) {
-      paginas.push('...');
-    }
-    
-    paginas.push(total);
-  }
-  
-  return paginas;
-};
-
-const verPropiedadEnMapa = (propiedad: PropiedadRecomendadaML) => {
-  propiedadSeleccionada.value = propiedad
-  
-  // Scroll suave al mapa
-  nextTick(() => {
-    const mapElement = document.querySelector('.h-96')
-    if (mapElement) {
-      mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
-  })
 }
 
 const handleFeedback = (data: { propiedad: PropiedadRecomendadaML; tipo: string }) => {
@@ -361,9 +265,10 @@ const handleFeedback = (data: { propiedad: PropiedadRecomendadaML; tipo: string 
 }
 
 const nuevaBusqueda = () => {
-  recomendaciones.value = []
+  todasLasRecomendaciones.value = []
   metadataML.value = null
   propiedadSeleccionada.value = null
+  paginaActual.value = 1
 }
 
 const mostrarToast = (mensaje: string) => {
@@ -373,6 +278,37 @@ const mostrarToast = (mensaje: string) => {
   setTimeout(() => {
     showToast.value = false
   }, 3000)
+}
+
+// Funciones de formato y estilo
+const formatearPrecio = (precioUF: number): string => {
+  const VALOR_UF_CLP = 37500
+  const precioCLP = precioUF * VALOR_UF_CLP
+  const ufFormateado = precioUF.toLocaleString('es-CL', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  })
+  const clpFormateado = new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0,
+  }).format(precioCLP)
+  
+  return `${ufFormateado} UF (≈${clpFormateado} CLP)`
+}
+
+const getScoreColor = (score: number): string => {
+  if (score >= 80) return 'text-green-600'
+  if (score >= 60) return 'text-blue-600'
+  if (score >= 40) return 'text-orange-600'
+  return 'text-gray-600'
+}
+
+const getScoreIcon = (score: number): string => {
+  if (score >= 80) return 'pi pi-star-fill'
+  if (score >= 60) return 'pi pi-star'
+  if (score >= 40) return 'pi pi-thumbs-up'
+  return 'pi pi-lightbulb'
 }
 </script>
 
