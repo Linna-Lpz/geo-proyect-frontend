@@ -5,22 +5,26 @@
   <!-- Toggle POI Button -->
     <button
       v-if="selectedPropertyInfo"
-      @click="togglePOI"
+      @click="handlePOIButton"
+      :disabled="loadingPOI"
       :class="[
-        'absolute top-4 right-4 z-10 px-4 py-2 rounded-lg shadow-lg font-semibold transition-all',
-        showPOI 
-          ? 'bg-blue-600 text-white hover:bg-blue-700' 
-          : 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300'
+        'absolute top-4 right-4 z-[1000] px-4 py-2 rounded-lg shadow-lg font-semibold transition-all flex items-center gap-2',
+        loadingPOI ? 'opacity-70 cursor-wait' : '',
+        puntosDeInteres ? (showPOI ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300') : 'bg-green-600 text-white hover:bg-green-700'
       ]"
     >
-      <span v-if="showPOI"><i class="pi pi-eye mr-2"></i>Ocultar Servicios</span>
-      <span v-else><i class="pi pi-map mr-2"></i>Mostrar Servicios</span>
+      <span v-if="loadingPOI" class="flex items-center gap-2">
+        <i class="pi pi-spin pi-spinner" /> Buscando...
+      </span>
+      <span v-else-if="!puntosDeInteres"><i class="pi pi-search mr-1"></i>Buscar Servicios</span>
+      <span v-else-if="showPOI"><i class="pi pi-eye mr-1"></i>Ocultar Servicios</span>
+      <span v-else><i class="pi pi-map mr-1"></i>Mostrar Servicios</span>
     </button>
     
     <!-- POI Legend (cuando se muestran los POIs) -->
     <div
       v-if="selectedPropertyInfo && showPOI && puntosDeInteres"
-      class="absolute top-20 right-4 bg-white rounded-lg shadow-xl p-3 z-10 max-w-xs"
+      class="absolute top-20 right-4 bg-white rounded-lg shadow-xl p-3 z-[1000] max-w-xs"
     >
   <h4 class="font-bold text-sm mb-2 text-gray-700"><i class="pi pi-map-marker mr-2"></i>Servicios Cercanos</h4>
       <div class="space-y-1 text-xs">
@@ -61,50 +65,11 @@
         Radio de búsqueda: 1.5 km
       </p>
     </div>
-    
-    <!-- Property Info Card (when selected) -->
-    <div
-      v-if="selectedPropertyInfo"
-      class="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-xl p-4 max-w-md z-10"
-    >
-      <button
-        @click="clearSelection"
-        class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-      >
-        <i class="pi pi-times"></i>
-      </button>
-      
-      <div class="space-y-2">
-        <div class="flex items-center gap-2">
-          <i v-if="selectedPropertyInfo.score" :class="['text-2xl', iconClass(getEmojiScore(selectedPropertyInfo.score))]"></i>
-          <h3 class="font-bold text-lg">{{ selectedPropertyInfo.direccion }}</h3>
-        </div>
-        
-  <p class="text-sm text-gray-600"><i class="pi pi-map-marker mr-1"></i> {{ selectedPropertyInfo.comuna }}</p>
-        
-        <div class="flex items-center gap-4 text-sm">
-          <span class="font-bold text-green-600">
-            {{ formatearPrecio(selectedPropertyInfo.precio) }}
-          </span>
-          <span><i class="pi pi-user mr-1"></i> {{ selectedPropertyInfo.dormitorios }}D</span>
-          <span><i class="pi pi-shower mr-1"></i> {{ selectedPropertyInfo.banos }}B</span>
-        </div>
-        
-        <div v-if="selectedPropertyInfo.score" class="mt-3 pt-3 border-t border-gray-200">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-600">Puntuación:</span>
-            <span :class="['text-xl font-bold', getColorScore(selectedPropertyInfo.score)]">
-              {{ selectedPropertyInfo.score.toFixed(1) }}/100
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { obtenerPuntosDeInteresCercanos, type PointOfInterest, type PointsOfInterestResponse } from '~/services/pointsOfInterestService';
@@ -138,9 +103,12 @@ let poiMarkers: L.Marker[] = []; // Marcadores de puntos de interés
 const selectedPropertyInfo = ref<Property | null>(null);
 const showPOI = ref<boolean>(true); // Control para mostrar/ocultar POIs
 const puntosDeInteres = ref<PointsOfInterestResponse | null>(null);
+const loadingPOI = ref<boolean>(false);
 
 onMounted(() => {
   initMap();
+  // Asegurar que el mapa calcule correctamente su tamaño cuando el contenedor esté visible
+  nextTick(() => setTimeout(() => { if (map) map.invalidateSize(); }, 150));
 });
 
 watch(
@@ -159,6 +127,10 @@ watch(
     if (newSelected && map) {
       map.setView([newSelected.latitud, newSelected.longitud], 15);
       selectedPropertyInfo.value = newSelected;
+      // Resetear POIs al cambiar de propiedad hasta que el usuario vuelva a buscarlos
+      limpiarPuntosDeInteres();
+      puntosDeInteres.value = null;
+      showPOI.value = true;
     }
   }
 );
@@ -203,8 +175,8 @@ const updateMarkers = (propiedades: Property[]) => {
     const customIcon = L.divIcon({
       html: iconHtml,
       className: 'custom-marker',
-      iconSize: [60, 60], // Aumentado de 40x40 a 60x60
-      iconAnchor: [30, 60], // Ajustado proporcionalmente
+      iconSize: [40, 52], // ancho x alto total (incluye la cola)
+      iconAnchor: [20, 52], // punta del alfiler
     });
 
     const marker = L.marker([propiedad.latitud, propiedad.longitud], {
@@ -214,9 +186,10 @@ const updateMarkers = (propiedades: Property[]) => {
     marker.on('click', async () => {
       selectedPropertyInfo.value = propiedad;
       emit('property-selected', propiedad);
-      
-      // Cargar puntos de interés cercanos
-      await cargarPuntosDeInteresCercanos(propiedad.latitud, propiedad.longitud);
+      // Sólo cargamos si ya se había hecho una búsqueda antes y se quieren ver nuevamente (mantener UX liviana)
+      if (puntosDeInteres.value && showPOI.value) {
+        mostrarPuntosDeInteres();
+      }
     });
 
     markers.push(marker);
@@ -230,41 +203,41 @@ const updateMarkers = (propiedades: Property[]) => {
 };
 
 const getMarkerIcon = (score?: number): string => {
-  let color = '#3B82F6'; // blue default
-  let token = 'home';
+  let color = '#3B82F6'; // azul por defecto
+  let token = 'star';
 
   if (score !== undefined) {
     if (score >= 80) {
-      color = '#10B981'; // green
+      color = '#10B981'; // verde
       token = 'trophy';
     } else if (score >= 60) {
-      color = '#3B82F6'; // blue
+      color = '#3B82F6'; // azul
       token = 'star';
     } else if (score >= 40) {
-      color = '#F59E0B'; // yellow
+      color = '#F59E0B'; // amarillo
       token = 'thumbs';
     } else {
-      color = '#6B7280'; // gray
+      color = '#6B7280'; // gris
       token = 'idea';
     }
   }
 
-  const icon = `<i class="${iconClass(token)}" style="font-size:28px;color:white;"></i>`;
+  const icon = `<i class="${iconClass(token)}" style="font-size:18px;color:${color}"></i>`;
 
+  // Alfiler
   return `
-    <div style="
-      background-color: ${color};
-      width: 60px;
-      height: 60px;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      border: 4px solid white;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    ">
-      <div style="transform: rotate(45deg);">${icon}</div>
+    <div style="position: relative; width: 40px; height: 52px;">
+      <div style="
+        width: 36px; height: 36px; border-radius: 9999px; background: white;
+        border: 4px solid ${color}; box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        display: flex; align-items: center; justify-content: center; margin: 0 auto;
+      ">
+        ${icon}
+      </div>
+      <div style="
+        width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent;
+        border-top: 16px solid ${color}; margin: -2px auto 0 auto;
+      "></div>
     </div>
   `;
 };
@@ -272,13 +245,15 @@ const getMarkerIcon = (score?: number): string => {
 // Función para cargar puntos de interés cercanos
 const cargarPuntosDeInteresCercanos = async (latitud: number, longitud: number) => {
   try {
+    loadingPOI.value = true;
     puntosDeInteres.value = await obtenerPuntosDeInteresCercanos(latitud, longitud, 1500); // Radio de 1.5km
-    
     if (showPOI.value) {
       mostrarPuntosDeInteres();
     }
   } catch (error) {
     console.error('Error cargando puntos de interés:', error);
+  } finally {
+    loadingPOI.value = false;
   }
 };
 
@@ -368,45 +343,22 @@ const limpiarPuntosDeInteres = () => {
 };
 
 // Toggle para mostrar/ocultar POIs
-const togglePOI = () => {
+const handlePOIButton = async () => {
+  if (!selectedPropertyInfo.value) return;
+  // Si aún no hemos buscado POIs para esta propiedad
+  if (!puntosDeInteres.value) {
+    await cargarPuntosDeInteresCercanos(selectedPropertyInfo.value.latitud, selectedPropertyInfo.value.longitud);
+    return;
+  }
+  // Si ya existen, simplemente togglear
   showPOI.value = !showPOI.value;
-  
-  if (showPOI.value && puntosDeInteres.value) {
+  if (showPOI.value) {
     mostrarPuntosDeInteres();
   } else {
     limpiarPuntosDeInteres();
   }
 };
 
-const clearSelection = () => {
-  selectedPropertyInfo.value = null;
-  limpiarPuntosDeInteres();
-  puntosDeInteres.value = null;
-};
-
-const formatearPrecio = (precio: number): string => {
-  // Precio está en UF, convertir a CLP para visualización
-  const VALOR_UF_CLP = 37500;
-  const precioCLP = precio * VALOR_UF_CLP;
-  const ufFormateado = precio.toLocaleString('es-CL', { 
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0 
-  });
-  const clpFormateado = new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    minimumFractionDigits: 0,
-  }).format(precioCLP);
-  
-  return `${ufFormateado} UF (≈${clpFormateado})`;
-};
-
-const getColorScore = (score: number): string => {
-  if (score >= 80) return 'text-green-600';
-  if (score >= 60) return 'text-blue-600';
-  if (score >= 40) return 'text-yellow-600';
-  return 'text-gray-600';
-};
 
 // Map token -> PrimeIcons class
 const iconClass = (token: string) => {
@@ -439,12 +391,6 @@ const iconClass = (token: string) => {
       return 'pi pi-question';
   }
 };
-// Wrapper to obtain token from recommendation service
-const getEmojiScore = (score: number): string => {
-  return recommendationService.getEmojiScore(score);
-};
-
-// old emoji helper removed (we now use recommendationService.getEmojiScore and iconClass mapping)
 </script>
 
 <style>
