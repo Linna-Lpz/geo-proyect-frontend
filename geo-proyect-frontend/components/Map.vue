@@ -20,50 +20,160 @@
       <span v-else-if="showPOI"><i class="pi pi-eye mr-1"></i>Ocultar Servicios</span>
       <span v-else><i class="pi pi-map mr-1"></i>Mostrar Servicios</span>
     </button>
-    
-    <!-- POI Legend (cuando se muestran los POIs) -->
+
+    <!-- Panel de Control de Servicios (mejorado y unificado) -->
     <div
-      v-if="selectedPropertyInfo && showPOI && puntosDeInteres"
-      class="absolute top-20 right-4 bg-white rounded-lg shadow-xl p-3 z-[1000] max-w-xs"
+      v-if="selectedPropertyInfo && puntosDeInteres"
+      class="absolute top-16 right-4 bg-white rounded-xl shadow-2xl z-[1000] w-80 overflow-hidden"
     >
-  <h4 class="font-bold text-sm mb-2 text-gray-700"><i class="pi pi-map-marker mr-2"></i>Servicios Cercanos</h4>
-      <div class="space-y-1 text-xs">
-        <div v-if="puntosDeInteres.metros?.length" class="flex items-center gap-2">
-          <i class="pi pi-train"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.metros.length }} Metro(s)</span>
-        </div>
-        <div v-if="puntosDeInteres.colegios?.length" class="flex items-center gap-2">
-          <i class="pi pi-book"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.colegios.length }} Colegio(s)</span>
-        </div>
-        <div v-if="puntosDeInteres.centros_medicos?.length" class="flex items-center gap-2">
-          <i class="pi pi-hospital"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.centros_medicos.length }} Centro(s) Médico(s)</span>
-        </div>
-        <div v-if="puntosDeInteres.supermercados?.length" class="flex items-center gap-2">
-          <i class="pi pi-shopping-cart"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.supermercados.length }} Supermercado(s)</span>
-        </div>
-        <div v-if="puntosDeInteres.parques?.length" class="flex items-center gap-2">
-          <i class="pi pi-tree"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.parques.length }} Parque(s)</span>
-        </div>
-        <div v-if="puntosDeInteres.farmacias?.length" class="flex items-center gap-2">
-          <i class="pi pi-plus-circle"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.farmacias.length }} Farmacia(s)</span>
-        </div>
-        <div v-if="puntosDeInteres.comisarias?.length" class="flex items-center gap-2">
-          <i class="pi pi-shield"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.comisarias.length }} Comisaría(s)</span>
-        </div>
-        <div v-if="puntosDeInteres.bomberos?.length" class="flex items-center gap-2">
-          <i class="pi pi-fire"></i>
-          <span class="text-gray-600">{{ puntosDeInteres.bomberos.length }} Cuartel(es) Bomberos</span>
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-base flex items-center gap-2">
+            <i class="pi pi-map-marker"></i>
+            Servicios Cercanos
+          </h3>
+          <button 
+            @click="showPOI = !showPOI; showPOI ? mostrarPuntosDeInteres() : limpiarPuntosDeInteres(); showPOI ? mostrarCirculoRadio() : limpiarCirculoRadio();"
+            class="hover:bg-blue-700 rounded p-1 transition-colors"
+          >
+            <i :class="showPOI ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+          </button>
         </div>
       </div>
-      <p class="text-xs text-gray-500 mt-2 border-t pt-2">
-        Radio de búsqueda: 1.5 km
-      </p>
+
+      <!-- Radio de Búsqueda -->
+      <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <i class="pi pi-arrows-h text-blue-600"></i>
+          Radio: <span class="text-blue-600">{{ searchRadius }}m</span>
+        </label>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-gray-500">500m</span>
+          <input
+            type="range"
+            v-model="searchRadius"
+            @input="onRadiusChange"
+            min="500"
+            max="3000"
+            step="100"
+            class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-blue"
+          />
+          <span class="text-xs text-gray-500">3km</span>
+        </div>
+      </div>
+
+      <!-- Filtros de Servicios -->
+      <div v-if="showPOI" class="px-4 py-3 max-h-96 overflow-y-auto styled-scrollbar">
+        <div class="space-y-2">
+          <!-- Colegios -->
+          <label 
+            v-if="puntosDeInteres.colegios?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-purple-50 p-2 rounded-lg transition-colors border border-transparent hover:border-purple-200"
+            :class="{ 'bg-purple-50 border-purple-200': filtrosServicios.colegios }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.colegios" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-purple-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100">
+              <i class="pi pi-book text-purple-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Colegios</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.colegios.length }} establecimiento(s)</div>
+            </div>
+          </label>
+
+          <!-- Supermercados -->
+          <label 
+            v-if="puntosDeInteres.supermercados?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors border border-transparent hover:border-amber-200"
+            :class="{ 'bg-amber-50 border-amber-200': filtrosServicios.supermercados }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.supermercados" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-amber-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100">
+              <i class="pi pi-shopping-cart text-amber-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Supermercados</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.supermercados.length }} tienda(s)</div>
+            </div>
+          </label>
+
+          <!-- Farmacias -->
+          <label 
+            v-if="puntosDeInteres.farmacias?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-cyan-50 p-2 rounded-lg transition-colors border border-transparent hover:border-cyan-200"
+            :class="{ 'bg-cyan-50 border-cyan-200': filtrosServicios.farmacias }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.farmacias" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-cyan-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-cyan-100">
+              <i class="pi pi-plus-circle text-cyan-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Farmacias</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.farmacias.length }} farmacia(s)</div>
+            </div>
+          </label>
+
+          <!-- Centros Médicos -->
+          <label 
+            v-if="puntosDeInteres.centros_medicos?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-green-50 p-2 rounded-lg transition-colors border border-transparent hover:border-green-200"
+            :class="{ 'bg-green-50 border-green-200': filtrosServicios.centros_medicos }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.centros_medicos" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-green-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100">
+              <i class="pi pi-heart text-green-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Centros Médicos</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.centros_medicos.length }} centro(s)</div>
+            </div>
+          </label>
+
+          <!-- Comisarías -->
+          <label 
+            v-if="puntosDeInteres.comisarias?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-lg transition-colors border border-transparent hover:border-blue-200"
+            :class="{ 'bg-blue-50 border-blue-200': filtrosServicios.comisarias }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.comisarias" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-blue-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100">
+              <i class="pi pi-shield text-blue-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Comisarías</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.comisarias.length }} comisaría(s)</div>
+            </div>
+          </label>
+
+          <!-- Bomberos -->
+          <label 
+            v-if="puntosDeInteres.bomberos?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-rose-50 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-200"
+            :class="{ 'bg-rose-50 border-rose-200': filtrosServicios.bomberos }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.bomberos" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-rose-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-rose-100">
+              <i class="pi pi-bolt text-rose-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Bomberos</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.bomberos.length }} cuartel(es)</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Footer con Total -->
+      <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600 flex items-center gap-2">
+            <i class="pi pi-check-circle text-green-600"></i>
+            Total encontrados
+          </span>
+          <span class="font-bold text-blue-600">{{ puntosDeInteres.total_encontrados || 0 }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -100,10 +210,22 @@ const emit = defineEmits<{
 let map: L.Map | null = null;
 let markers: L.Marker[] = [];
 let poiMarkers: L.Marker[] = []; // Marcadores de puntos de interés
+let searchRadiusCircle: L.Circle | null = null; // Círculo del radio de búsqueda
 const selectedPropertyInfo = ref<Property | null>(null);
 const showPOI = ref<boolean>(true); // Control para mostrar/ocultar POIs
 const puntosDeInteres = ref<PointsOfInterestResponse | null>(null);
 const loadingPOI = ref<boolean>(false);
+const searchRadius = ref<number>(1500); // Radio de búsqueda en metros (por defecto 1.5km)
+const filtrosServicios = ref({
+  metros: true,
+  colegios: true,
+  centros_medicos: true,
+  supermercados: true,
+  parques: true,
+  farmacias: true,
+  comisarias: true,
+  bomberos: true
+});
 
 onMounted(() => {
   initMap();
@@ -242,13 +364,45 @@ const getMarkerIcon = (score?: number): string => {
   `;
 };
 
+// Función para mostrar círculo del radio de búsqueda
+const mostrarCirculoRadio = () => {
+  if (!map || !selectedPropertyInfo.value) return;
+  
+  // Limpiar círculo anterior si existe
+  limpiarCirculoRadio();
+  
+  // Crear nuevo círculo
+  searchRadiusCircle = L.circle(
+    [selectedPropertyInfo.value.latitud, selectedPropertyInfo.value.longitud],
+    {
+      radius: searchRadius.value,
+      color: '#3B82F6',
+      fillColor: '#3B82F6',
+      fillOpacity: 0.08,
+      weight: 2,
+      dashArray: '8, 12',
+      opacity: 0.6
+    }
+  ).addTo(map);
+};
+
+// Función para limpiar círculo del radio
+const limpiarCirculoRadio = () => {
+  if (searchRadiusCircle) {
+    searchRadiusCircle.remove();
+    searchRadiusCircle = null;
+  }
+};
+
 // Función para cargar puntos de interés cercanos
-const cargarPuntosDeInteresCercanos = async (latitud: number, longitud: number) => {
+const cargarPuntosDeInteresCercanos = async (latitud: number, longitud: number, radio?: number) => {
   try {
     loadingPOI.value = true;
-    puntosDeInteres.value = await obtenerPuntosDeInteresCercanos(latitud, longitud, 1500); // Radio de 1.5km
+    const radioActual = radio || searchRadius.value;
+    puntosDeInteres.value = await obtenerPuntosDeInteresCercanos(latitud, longitud, radioActual);
     if (showPOI.value) {
       mostrarPuntosDeInteres();
+      mostrarCirculoRadio(); // Mostrar círculo al cargar servicios
     }
   } catch (error) {
     console.error('Error cargando puntos de interés:', error);
@@ -266,29 +420,31 @@ const mostrarPuntosDeInteres = () => {
   
   const pois = puntosDeInteres.value;
   
-  // Metros
-  pois.metros?.forEach(poi => agregarMarcadorPOI(poi, 'train', '#EF4444', 'Metro'));
-  
-  // Colegios
-  pois.colegios?.forEach(poi => agregarMarcadorPOI(poi, 'book', '#8B5CF6', 'Colegio'));
-  
-  // Centros médicos
-  pois.centros_medicos?.forEach(poi => agregarMarcadorPOI(poi, 'hospital', '#10B981', 'Centro Médico'));
-  
-  // Supermercados
-  pois.supermercados?.forEach(poi => agregarMarcadorPOI(poi, 'shopping-cart', '#F59E0B', 'Supermercado'));
-  
-  // Parques
-  pois.parques?.forEach(poi => agregarMarcadorPOI(poi, 'tree', '#22C55E', 'Parque'));
-  
-  // Farmacias
-  pois.farmacias?.forEach(poi => agregarMarcadorPOI(poi, 'plus-circle', '#06B6D4', 'Farmacia'));
-  
-  // Comisarías
-  pois.comisarias?.forEach(poi => agregarMarcadorPOI(poi, 'shield', '#3B82F6', 'Comisaría'));
-  
-  // Bomberos
-  pois.bomberos?.forEach(poi => agregarMarcadorPOI(poi, 'fire', '#DC2626', 'Bomberos'));
+  // Mostrar solo los servicios que están habilitados en los filtros
+  if (filtrosServicios.value.metros) {
+    pois.metros?.forEach(poi => agregarMarcadorPOI(poi, 'train', '#EF4444', 'Metro'));
+  }
+  if (filtrosServicios.value.colegios) {
+    pois.colegios?.forEach(poi => agregarMarcadorPOI(poi, 'book', '#8B5CF6', 'Colegio'));
+  }
+  if (filtrosServicios.value.centros_medicos) {
+    pois.centros_medicos?.forEach(poi => agregarMarcadorPOI(poi, 'hospital', '#10B981', 'Centro Médico'));
+  }
+  if (filtrosServicios.value.supermercados) {
+    pois.supermercados?.forEach(poi => agregarMarcadorPOI(poi, 'shopping-cart', '#F59E0B', 'Supermercado'));
+  }
+  if (filtrosServicios.value.parques) {
+    pois.parques?.forEach(poi => agregarMarcadorPOI(poi, 'tree', '#22C55E', 'Parque'));
+  }
+  if (filtrosServicios.value.farmacias) {
+    pois.farmacias?.forEach(poi => agregarMarcadorPOI(poi, 'plus-circle', '#06B6D4', 'Farmacia'));
+  }
+  if (filtrosServicios.value.comisarias) {
+    pois.comisarias?.forEach(poi => agregarMarcadorPOI(poi, 'shield', '#3B82F6', 'Comisaría'));
+  }
+  if (filtrosServicios.value.bomberos) {
+    pois.bomberos?.forEach(poi => agregarMarcadorPOI(poi, 'fire', '#DC2626', 'Bomberos'));
+  }
 };
 
 // Función auxiliar para agregar un marcador de POI
@@ -323,15 +479,27 @@ const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, 
     opacity: 0.85
   }).addTo(map);
   
-  // Agregar popup con información
-  const distanciaTexto = poi.distancia ? `<br><small><i class="pi pi-ruler"></i> ${poi.distancia}m de distancia</small>` : '';
+  // Agregar popup con información completa
+  const distanciaTexto = poi.distancia ? `<div class="text-sm text-gray-600 mt-1"><i class="pi pi-map-marker"></i> ${Math.round(poi.distancia)}m de distancia</div>` : '';
+  const direccionTexto = poi.direccion ? `<div class="text-xs text-gray-500 mt-1"><i class="pi pi-home"></i> ${poi.direccion}</div>` : '';
+  const telefonoTexto = poi.telefono ? `<div class="text-xs text-gray-500"><i class="pi pi-phone"></i> ${poi.telefono}</div>` : '';
+  const horarioTexto = poi.horario ? `<div class="text-xs text-gray-500"><i class="pi pi-clock"></i> ${poi.horario}</div>` : '';
+  
   marker.bindPopup(`
-    <div style="text-align: center;">
-      <strong><i class="${iconClass(emoji)}"></i> ${tipo}</strong><br>
-      ${poi.nombre}
+    <div style="min-width: 200px; max-width: 300px;">
+      <div style="text-align: center; border-bottom: 2px solid ${color}; padding-bottom: 8px; margin-bottom: 8px;">
+        <strong style="font-size: 14px; color: ${color};"><i class="${iconClass(emoji)}"></i> ${tipo}</strong>
+      </div>
+      <div style="font-weight: 600; margin-bottom: 6px;">${poi.nombre}</div>
       ${distanciaTexto}
+      ${direccionTexto}
+      ${telefonoTexto}
+      ${horarioTexto}
     </div>
-  `);
+  `, {
+    maxWidth: 300,
+    className: 'custom-popup'
+  });
   
   poiMarkers.push(marker);
 };
@@ -340,6 +508,7 @@ const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, 
 const limpiarPuntosDeInteres = () => {
   poiMarkers.forEach(marker => marker.remove());
   poiMarkers = [];
+  limpiarCirculoRadio(); // Limpiar círculo también
 };
 
 // Toggle para mostrar/ocultar POIs
@@ -354,8 +523,23 @@ const handlePOIButton = async () => {
   showPOI.value = !showPOI.value;
   if (showPOI.value) {
     mostrarPuntosDeInteres();
+    mostrarCirculoRadio(); // Mostrar círculo
   } else {
     limpiarPuntosDeInteres();
+  }
+};
+
+// Handler para cambio de radio
+const onRadiusChange = async () => {
+  if (!selectedPropertyInfo.value) return;
+  // Recargar POIs con el nuevo radio
+  await cargarPuntosDeInteresCercanos(selectedPropertyInfo.value.latitud, selectedPropertyInfo.value.longitud, searchRadius.value);
+};
+
+// Actualizar marcadores cuando cambian los filtros
+const actualizarMarcadores = () => {
+  if (showPOI.value) {
+    mostrarPuntosDeInteres();
   }
 };
 
@@ -408,5 +592,85 @@ const iconClass = (token: string) => {
 .custom-poi-marker:hover {
   transform: scale(1.1);
   transition: transform 0.2s ease;
+}
+
+/* Estilos para el slider de radio */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3B82F6;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3B82F6;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #3B82F6 0%, #3B82F6 var(--value), #E5E7EB var(--value), #E5E7EB 100%);
+  height: 8px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-moz-range-track {
+  background: #E5E7EB;
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* Scrollbar personalizado para panel de servicios */
+.styled-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 10px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb {
+  background: #3B82F6;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2563EB;
+}
+
+/* Slider mejorado con efecto hover */
+.slider-blue:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4);
+}
+
+.slider-blue:hover::-moz-range-thumb {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Estilos para popups personalizados */
+.custom-popup .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 12px;
 }
 </style>
