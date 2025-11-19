@@ -96,6 +96,10 @@
 import { ref, onMounted } from 'vue';
 import { predictionService, type PrediccionResponse } from '~/services/predictionService';
 
+definePageMeta({
+  title: 'Predictor de Precios ML'
+});
+
 const currentPrediction = ref<PrediccionResponse | null>(null);
 const predictionHistory = ref<PrediccionResponse[]>([]);
 const serverStatus = ref('Verificando servidor...');

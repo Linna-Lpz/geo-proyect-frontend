@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-100">
-    <NavBar />
-    
     <div class="container mx-auto px-4 py-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)]">
         <!-- Chat Section (Left/Top) -->
@@ -275,6 +273,10 @@ import {
   type PreferenciasUsuario,
   type PropiedadRecomendada,
 } from '~/services/recommendationService';
+
+definePageMeta({
+  title: 'Asistente Inteligente - Búsqueda Conversacional'
+});
 
 const todasLasRecomendaciones = ref<PropiedadRecomendada[]>([]);
 const paginaActual = ref(1);

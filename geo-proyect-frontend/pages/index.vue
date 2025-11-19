@@ -84,6 +84,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  title: 'Inicio - TerraMatch'
+});
+
 const comunas = [
   'Estación Central',
   'Santiago',

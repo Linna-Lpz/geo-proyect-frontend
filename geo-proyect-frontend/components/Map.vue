@@ -2,6 +2,16 @@
   <div class="relative w-full h-full">
     <div id="map" class="w-full h-full"></div>
     
+    <!-- Botón Pantalla Completa -->
+    <button
+      @click="toggleFullscreen"
+      class="absolute bottom-4 left-4 z-[1000] px-3 py-2 bg-white rounded-lg shadow-lg hover:bg-gray-100 transition-all border-2 border-gray-300 flex items-center gap-2"
+      title="Ver en pantalla completa"
+    >
+      <i class="pi pi-window-maximize text-gray-700"></i>
+      <span class="text-sm font-medium text-gray-700 hidden sm:inline">Pantalla completa</span>
+    </button>
+
   <!-- Toggle POI Button -->
     <button
       v-if="selectedPropertyInfo"
@@ -175,6 +185,189 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Pantalla Completa -->
+    <Teleport to="body">
+      <div
+        v-if="isFullscreen"
+        class="fixed inset-0 bg-black bg-opacity-95 z-[10000] flex flex-col"
+      >
+        <!-- Header del Modal -->
+        <div class="bg-white shadow-lg px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="pi pi-map text-blue-600 text-2xl"></i>
+            <div>
+              <h2 class="text-xl font-bold text-gray-800">Mapa en Pantalla Completa</h2>
+              <p v-if="selectedPropertyInfo" class="text-sm text-gray-600">{{ selectedPropertyInfo.direccion }}</p>
+            </div>
+          </div>
+          <button
+            @click="toggleFullscreen"
+            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-medium flex items-center gap-2"
+          >
+            <i class="pi pi-times"></i>
+            Cerrar
+          </button>
+        </div>
+
+        <!-- Mapa en Fullscreen -->
+        <div class="flex-1 relative bg-gray-200">
+          <div id="map-fullscreen" class="w-full h-full"></div>
+          
+          <!-- Botón para volver a mostrar todas las propiedades -->
+          <button
+            v-if="selectedPropertyInfo"
+            @click="mostrarTodasPropiedades"
+            class="absolute bottom-4 left-4 z-[1000] px-4 py-2 bg-gray-700 text-white rounded-lg shadow-lg hover:bg-gray-800 transition-all font-medium flex items-center gap-2"
+          >
+            <i class="pi pi-eye"></i>
+            Ver todas las propiedades
+          </button>
+
+          <!-- Toggle POI Button (en fullscreen) -->
+          <button
+            v-if="selectedPropertyInfo"
+            @click="handlePOIButton"
+            :disabled="loadingPOI"
+            :class="[
+              'absolute top-4 right-4 z-[1000] px-4 py-2 rounded-lg shadow-lg font-semibold transition-all flex items-center gap-2',
+              loadingPOI ? 'opacity-70 cursor-wait' : '',
+              puntosDeInteres ? (showPOI ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300') : 'bg-green-600 text-white hover:bg-green-700'
+            ]"
+          >
+            <span v-if="loadingPOI" class="flex items-center gap-2">
+              <i class="pi pi-spin pi-spinner" /> Buscando...
+            </span>
+            <span v-else-if="!puntosDeInteres"><i class="pi pi-search mr-1"></i>Buscar Servicios</span>
+            <span v-else-if="showPOI"><i class="pi pi-eye mr-1"></i>Ocultar Servicios</span>
+            <span v-else><i class="pi pi-map mr-1"></i>Mostrar Servicios</span>
+          </button>
+
+          <!-- Panel de Control de Servicios en Fullscreen -->
+          <div
+            v-if="selectedPropertyInfo && puntosDeInteres"
+            class="absolute top-16 right-4 bg-white rounded-xl shadow-2xl z-[1000] w-80 overflow-hidden"
+          >
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                  <i class="pi pi-map-marker"></i>
+                  Servicios Cercanos
+                </h3>
+                <button 
+                  @click="showPOI = !showPOI; showPOI ? mostrarPuntosDeInteres() : limpiarPuntosDeInteres(); showPOI ? mostrarCirculoRadio() : limpiarCirculoRadio();"
+                  class="hover:bg-blue-700 rounded p-1 transition-colors"
+                >
+                  <i :class="showPOI ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Radio de Búsqueda -->
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <i class="pi pi-arrows-h text-blue-600"></i>
+                Radio: <span class="text-blue-600">{{ searchRadius }}m</span>
+              </label>
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-500">500m</span>
+                <input
+                  type="range"
+                  v-model="searchRadius"
+                  @input="onRadiusChange"
+                  min="500"
+                  max="3000"
+                  step="100"
+                  class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-blue"
+                />
+                <span class="text-xs text-gray-500">3km</span>
+              </div>
+            </div>
+
+            <!-- Filtros de Servicios -->
+            <div v-if="showPOI" class="px-4 py-3 max-h-96 overflow-y-auto styled-scrollbar">
+              <div class="space-y-2">
+                <!-- Colegios -->
+                <label 
+                  v-if="puntosDeInteres.colegios?.length" 
+                  class="flex items-center gap-3 cursor-pointer hover:bg-purple-50 p-2 rounded-lg transition-colors border border-transparent hover:border-purple-200"
+                  :class="{ 'bg-purple-50 border-purple-200': filtrosServicios.colegios }"
+                >
+                  <input type="checkbox" v-model="filtrosServicios.colegios" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-purple-500" />
+                  <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100">
+                    <i class="pi pi-book text-purple-600 text-lg"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-gray-800 text-sm">Colegios</div>
+                    <div class="text-xs text-gray-500">{{ puntosDeInteres.colegios.length }} establecimiento(s)</div>
+                  </div>
+                </label>
+
+                <!-- Supermercados -->
+                <label 
+                  v-if="puntosDeInteres.supermercados?.length" 
+                  class="flex items-center gap-3 cursor-pointer hover:bg-amber-50 p-2 rounded-lg transition-colors border border-transparent hover:border-amber-200"
+                  :class="{ 'bg-amber-50 border-amber-200': filtrosServicios.supermercados }"
+                >
+                  <input type="checkbox" v-model="filtrosServicios.supermercados" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-amber-500" />
+                  <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100">
+                    <i class="pi pi-shopping-cart text-amber-600 text-lg"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-gray-800 text-sm">Supermercados</div>
+                    <div class="text-xs text-gray-500">{{ puntosDeInteres.supermercados.length }} tienda(s)</div>
+                  </div>
+                </label>
+
+                <!-- Farmacias -->
+                <label 
+                  v-if="puntosDeInteres.farmacias?.length" 
+                  class="flex items-center gap-3 cursor-pointer hover:bg-cyan-50 p-2 rounded-lg transition-colors border border-transparent hover:border-cyan-200"
+                  :class="{ 'bg-cyan-50 border-cyan-200': filtrosServicios.farmacias }"
+                >
+                  <input type="checkbox" v-model="filtrosServicios.farmacias" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-cyan-500" />
+                  <div class="flex items-center justify-center w-10 h-10 rounded-full bg-cyan-100">
+                    <i class="pi pi-plus-circle text-cyan-600 text-lg"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-gray-800 text-sm">Farmacias</div>
+                    <div class="text-xs text-gray-500">{{ puntosDeInteres.farmacias.length }} farmacia(s)</div>
+                  </div>
+                </label>
+
+                <!-- Comisarías -->
+                <label 
+                  v-if="puntosDeInteres.comisarias?.length" 
+                  class="flex items-center gap-3 cursor-pointer hover:bg-sky-50 p-2 rounded-lg transition-colors border border-transparent hover:border-sky-200"
+                  :class="{ 'bg-sky-50 border-sky-200': filtrosServicios.comisarias }"
+                >
+                  <input type="checkbox" v-model="filtrosServicios.comisarias" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-sky-500" />
+                  <div class="flex items-center justify-center w-10 h-10 rounded-full bg-sky-100">
+                    <i class="pi pi-shield text-sky-600 text-lg"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-gray-800 text-sm">Comisarías</div>
+                    <div class="text-xs text-gray-500">{{ puntosDeInteres.comisarias.length }} comisaría(s)</div>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Resumen -->
+              <div class="mt-3 pt-3 border-t border-gray-200">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600 flex items-center gap-2">
+                    <i class="pi pi-check-circle text-green-600"></i>
+                    Total encontrados
+                  </span>
+                  <span class="font-bold text-gray-800">{{ puntosDeInteres.total_encontrados || 0 }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -208,7 +401,9 @@ const emit = defineEmits<{
 }>();
 
 let map: L.Map | null = null;
+let mapFullscreen: L.Map | null = null;
 let markers: L.Marker[] = [];
+let fullscreenMarkers: L.Marker[] = []; // Marcadores del mapa fullscreen
 let poiMarkers: L.Marker[] = []; // Marcadores de puntos de interés
 let searchRadiusCircle: L.Circle | null = null; // Círculo del radio de búsqueda
 const selectedPropertyInfo = ref<Property | null>(null);
@@ -216,6 +411,7 @@ const showPOI = ref<boolean>(true); // Control para mostrar/ocultar POIs
 const puntosDeInteres = ref<PointsOfInterestResponse | null>(null);
 const loadingPOI = ref<boolean>(false);
 const searchRadius = ref<number>(1500); // Radio de búsqueda en metros (por defecto 1.5km)
+const isFullscreen = ref<boolean>(false);
 const filtrosServicios = ref({
   metros: true,
   colegios: true,
@@ -308,9 +504,20 @@ const updateMarkers = (propiedades: Property[]) => {
     marker.on('click', async () => {
       selectedPropertyInfo.value = propiedad;
       emit('property-selected', propiedad);
-      // Sólo cargamos si ya se había hecho una búsqueda antes y se quieren ver nuevamente (mantener UX liviana)
-      if (puntosDeInteres.value && showPOI.value) {
-        mostrarPuntosDeInteres();
+      
+      // Si estamos en fullscreen, ocultar las demás propiedades
+      if (isFullscreen.value) {
+        const activeMap = mapFullscreen || map;
+        markers.forEach(m => {
+          if (m !== marker && activeMap && activeMap.hasLayer(m)) {
+            activeMap.removeLayer(m);
+          }
+        });
+      }
+      
+      // Cargar puntos de interés si aún no se han cargado
+      if (!puntosDeInteres.value) {
+        await cargarPuntosDeInteresCercanos(propiedad.latitud, propiedad.longitud);
       }
     });
 
@@ -366,7 +573,8 @@ const getMarkerIcon = (score?: number): string => {
 
 // Función para mostrar círculo del radio de búsqueda
 const mostrarCirculoRadio = () => {
-  if (!map || !selectedPropertyInfo.value) return;
+  const activeMap = mapFullscreen || map;
+  if (!activeMap || !selectedPropertyInfo.value) return;
   
   // Limpiar círculo anterior si existe
   limpiarCirculoRadio();
@@ -383,7 +591,7 @@ const mostrarCirculoRadio = () => {
       dashArray: '8, 12',
       opacity: 0.6
     }
-  ).addTo(map);
+  ).addTo(activeMap);
 };
 
 // Función para limpiar círculo del radio
@@ -413,7 +621,8 @@ const cargarPuntosDeInteresCercanos = async (latitud: number, longitud: number, 
 
 // Función para mostrar los puntos de interés en el mapa
 const mostrarPuntosDeInteres = () => {
-  if (!map || !puntosDeInteres.value) return;
+  const activeMap = mapFullscreen || map;
+  if (!activeMap || !puntosDeInteres.value) return;
   
   // Limpiar marcadores anteriores de POI
   limpiarPuntosDeInteres();
@@ -422,34 +631,34 @@ const mostrarPuntosDeInteres = () => {
   
   // Mostrar solo los servicios que están habilitados en los filtros
   if (filtrosServicios.value.metros) {
-    pois.metros?.forEach(poi => agregarMarcadorPOI(poi, 'train', '#EF4444', 'Metro'));
+    pois.metros?.forEach(poi => agregarMarcadorPOI(poi, 'train', '#EF4444', 'Metro', activeMap));
   }
   if (filtrosServicios.value.colegios) {
-    pois.colegios?.forEach(poi => agregarMarcadorPOI(poi, 'book', '#8B5CF6', 'Colegio'));
+    pois.colegios?.forEach(poi => agregarMarcadorPOI(poi, 'book', '#8B5CF6', 'Colegio', activeMap));
   }
   if (filtrosServicios.value.centros_medicos) {
-    pois.centros_medicos?.forEach(poi => agregarMarcadorPOI(poi, 'hospital', '#10B981', 'Centro Médico'));
+    pois.centros_medicos?.forEach(poi => agregarMarcadorPOI(poi, 'hospital', '#10B981', 'Centro Médico', activeMap));
   }
   if (filtrosServicios.value.supermercados) {
-    pois.supermercados?.forEach(poi => agregarMarcadorPOI(poi, 'shopping-cart', '#F59E0B', 'Supermercado'));
+    pois.supermercados?.forEach(poi => agregarMarcadorPOI(poi, 'shopping-cart', '#F59E0B', 'Supermercado', activeMap));
   }
   if (filtrosServicios.value.parques) {
-    pois.parques?.forEach(poi => agregarMarcadorPOI(poi, 'tree', '#22C55E', 'Parque'));
+    pois.parques?.forEach(poi => agregarMarcadorPOI(poi, 'tree', '#22C55E', 'Parque', activeMap));
   }
   if (filtrosServicios.value.farmacias) {
-    pois.farmacias?.forEach(poi => agregarMarcadorPOI(poi, 'plus-circle', '#06B6D4', 'Farmacia'));
+    pois.farmacias?.forEach(poi => agregarMarcadorPOI(poi, 'plus-circle', '#06B6D4', 'Farmacia', activeMap));
   }
   if (filtrosServicios.value.comisarias) {
-    pois.comisarias?.forEach(poi => agregarMarcadorPOI(poi, 'shield', '#3B82F6', 'Comisaría'));
+    pois.comisarias?.forEach(poi => agregarMarcadorPOI(poi, 'shield', '#3B82F6', 'Comisaría', activeMap));
   }
   if (filtrosServicios.value.bomberos) {
-    pois.bomberos?.forEach(poi => agregarMarcadorPOI(poi, 'fire', '#DC2626', 'Bomberos'));
+    pois.bomberos?.forEach(poi => agregarMarcadorPOI(poi, 'fire', '#DC2626', 'Bomberos', activeMap));
   }
 };
 
 // Función auxiliar para agregar un marcador de POI
-const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, tipo: string) => {
-  if (!map) return;
+const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, tipo: string, targetMap: L.Map) => {
+  if (!targetMap) return;
   
   const iconHtml = `
     <div style="
@@ -477,7 +686,7 @@ const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, 
   const marker = L.marker([poi.latitud, poi.longitud], {
     icon: customIcon,
     opacity: 0.85
-  }).addTo(map);
+  }).addTo(targetMap);
   
   // Agregar popup con información completa
   const distanciaTexto = poi.distancia ? `<div class="text-sm text-gray-600 mt-1"><i class="pi pi-map-marker"></i> ${Math.round(poi.distancia)}m de distancia</div>` : '';
@@ -541,6 +750,158 @@ const actualizarMarcadores = () => {
   if (showPOI.value) {
     mostrarPuntosDeInteres();
   }
+};
+
+// Toggle fullscreen
+// Función para mostrar todas las propiedades nuevamente
+const mostrarTodasPropiedades = () => {
+  const activeMap = mapFullscreen || map;
+  if (!activeMap || !props.propiedades) return;
+
+  // Volver a mostrar todos los marcadores del fullscreen
+  fullscreenMarkers.forEach(m => {
+    if (!activeMap.hasLayer(m)) {
+      m.addTo(activeMap);
+    }
+  });
+
+  // Limpiar servicios
+  limpiarPuntosDeInteres();
+  limpiarCirculoRadio();
+  puntosDeInteres.value = null;
+  showPOI.value = false;
+  selectedPropertyInfo.value = null;
+};
+
+const toggleFullscreen = async () => {
+  isFullscreen.value = !isFullscreen.value;
+  
+  if (isFullscreen.value) {
+    // Abrir fullscreen
+    await nextTick();
+    
+    // Inicializar mapa fullscreen con centro por defecto
+    const defaultCenter: [number, number] = [-33.4489, -70.6693];
+    
+    mapFullscreen = L.map('map-fullscreen').setView(defaultCenter, 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(mapFullscreen);
+
+    // Fix icon issue
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    });
+
+    // Copiar marcadores al mapa fullscreen con popups
+    if (props.propiedades && props.propiedades.length > 0) {
+      // Limpiar marcadores anteriores del fullscreen
+      fullscreenMarkers.forEach(m => mapFullscreen?.removeLayer(m));
+      fullscreenMarkers = [];
+      
+      props.propiedades.forEach((propiedad) => {
+        if (!mapFullscreen) return;
+
+        const iconHtml = getMarkerIcon(propiedad.score);
+        const customIcon = L.divIcon({
+          html: iconHtml,
+          className: 'custom-marker',
+          iconSize: [40, 52],
+          iconAnchor: [20, 52],
+        });
+
+        const marker = L.marker([propiedad.latitud, propiedad.longitud], {
+          icon: customIcon,
+        }).addTo(mapFullscreen);
+
+        marker.on('click', async () => {
+          selectedPropertyInfo.value = propiedad;
+          emit('property-selected', propiedad);
+          
+          // Ocultar las demás propiedades en fullscreen
+          fullscreenMarkers.forEach(m => {
+            if (m !== marker && mapFullscreen?.hasLayer(m)) {
+              mapFullscreen?.removeLayer(m);
+            }
+          });
+          
+          // Cargar puntos de interés si aún no se han cargado
+          if (!puntosDeInteres.value) {
+            await cargarPuntosDeInteresCercanos(propiedad.latitud, propiedad.longitud);
+          } else if (showPOI.value) {
+            // Si ya existen POIs y están visibles, mostrarlos
+            mostrarPuntosDeInteres();
+            mostrarCirculoRadio();
+          }
+        });
+
+        // Agregar popup igual que en el mapa normal
+        const popupContent = `
+          <div style="min-width: 200px;">
+            <b>${propiedad.direccion}</b><br/>
+            <span style="color: #10B981; font-weight: bold;">
+              ${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(propiedad.precio)}
+            </span><br/>
+            ${propiedad.dormitorios}D / ${propiedad.banos}B
+            ${propiedad.score ? `<br/><span style="color: ${getMarkerColor(propiedad.score)};">Score: ${propiedad.score.toFixed(1)}/100</span>` : ''}
+            ${propiedad.comuna ? `<br/><small>${propiedad.comuna}</small>` : ''}
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+        
+        // Guardar en el array de marcadores fullscreen
+        fullscreenMarkers.push(marker);
+      });
+
+      // Ajustar el zoom para mostrar todos los marcadores
+      if (fullscreenMarkers.length > 0) {
+        const group = L.featureGroup(fullscreenMarkers);
+        mapFullscreen.fitBounds(group.getBounds(), { padding: [50, 50] });
+      }
+    }
+
+    // Agregar evento de click en el mapa para reactivar todas las propiedades
+    if (mapFullscreen) {
+      mapFullscreen.on('click', (e: L.LeafletMouseEvent) => {
+        // Solo reactivar si hay propiedades ocultas y se hizo click en el mapa (no en un marcador)
+        const clickedOnMarker = fullscreenMarkers.some(m => {
+          const markerLatLng = m.getLatLng();
+          const distance = mapFullscreen!.distance(e.latlng, markerLatLng);
+          return distance < 20; // 20 metros de tolerancia
+        });
+
+        if (!clickedOnMarker && selectedPropertyInfo.value) {
+          mostrarTodasPropiedades();
+        }
+      });
+    }
+
+    // Copiar POIs si están visibles
+    if (showPOI.value && puntosDeInteres.value && mapFullscreen) {
+      mostrarPuntosDeInteres();
+      mostrarCirculoRadio();
+    }
+  } else {
+    // Cerrar fullscreen
+    if (mapFullscreen) {
+      mapFullscreen.remove();
+      mapFullscreen = null;
+    }
+  }
+};
+
+// Función auxiliar para obtener color del marcador
+const getMarkerColor = (score?: number): string => {
+  if (!score) return '#6B7280';
+  if (score >= 80) return '#10B981';
+  if (score >= 60) return '#3B82F6';
+  if (score >= 40) return '#F59E0B';
+  return '#6B7280';
 };
 
 

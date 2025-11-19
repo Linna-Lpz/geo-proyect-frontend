@@ -14,7 +14,10 @@
             </svg>
           </span>
 
-          <span class="text-lg font-semibold text-slate-900 dark:text-slate-100">TerraMatch</span>
+          <div class="flex flex-col">
+            <span class="text-lg font-semibold text-slate-900 dark:text-slate-100">TerraMatch</span>
+            <span v-if="currentPageTitle" class="text-xs text-blue-600 font-medium">{{ currentPageTitle }}</span>
+          </div>
         </NuxtLink>
 
         <!-- Mobile menu placeholder (keeps layout consistent) -->
@@ -30,12 +33,36 @@
         <!-- Navegación -->
         <div class="hidden md:flex space-x-6">
           <NuxtLink 
-            :to="navTo"
+            to="/"
             class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
-            @click="mobileMenuOpen = false"
+            :class="{ 'text-blue-600': route.path === '/' }"
           >
-            <i :class="navIcon" class="mr-1"></i>
-            {{ navLabel }}
+            <i class="pi pi-home mr-1"></i>
+            Inicio
+          </NuxtLink>
+          <NuxtLink 
+            to="/recomendacionesML"
+            class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
+            :class="{ 'text-blue-600': route.path === '/recomendacionesML' }"
+          >
+            <i class="pi pi-search mr-1"></i>
+            Búsqueda Avanzada
+          </NuxtLink>
+          <NuxtLink 
+            to="/chatRecommendations"
+            class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
+            :class="{ 'text-blue-600': route.path === '/chatRecommendations' }"
+          >
+            <i class="pi pi-comments mr-1"></i>
+            Asistente Inteligente
+          </NuxtLink>
+          <NuxtLink 
+            to="/propertySearch"
+            class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
+            :class="{ 'text-blue-600': route.path === '/propertySearch' }"
+          >
+            <i class="pi pi-dollar mr-1"></i>
+            Predictor de Precios
           </NuxtLink>
         </div>
 
@@ -51,21 +78,42 @@
       </div>
 
       <!-- Mobile menu -->
-      <div v-if="mobileMenuOpen" class="md:hidden pb-4">
+      <div v-if="mobileMenuOpen" class="md:hidden pb-4 space-y-2">
         <NuxtLink 
           to="/" 
-          class="block py-2 text-gray-700 hover:text-blue-600 font-medium"
+          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
+          :class="{ 'bg-blue-50 text-blue-600': route.path === '/' }"
           @click="mobileMenuOpen = false"
         >
+          <i class="pi pi-home mr-2"></i>
           Inicio
         </NuxtLink>
         <NuxtLink 
-          :to="navTo"
-          class="block py-2 text-gray-700 hover:text-blue-600 font-medium flex items-center"
+          to="/recomendacionesML"
+          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
+          :class="{ 'bg-blue-50 text-blue-600': route.path === '/recomendacionesML' }"
           @click="mobileMenuOpen = false"
         >
-          <i :class="navIcon" class="mr-1"></i>
-          {{ navLabel }}
+          <i class="pi pi-search mr-2"></i>
+          Búsqueda Avanzada
+        </NuxtLink>
+        <NuxtLink 
+          to="/chatRecommendations"
+          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
+          :class="{ 'bg-blue-50 text-blue-600': route.path === '/chatRecommendations' }"
+          @click="mobileMenuOpen = false"
+        >
+          <i class="pi pi-comments mr-2"></i>
+          Asistente Inteligente
+        </NuxtLink>
+        <NuxtLink 
+          to="/propertySearch"
+          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
+          :class="{ 'bg-blue-50 text-blue-600': route.path === '/propertySearch' }"
+          @click="mobileMenuOpen = false"
+        >
+          <i class="pi pi-dollar mr-2"></i>
+          Predictor de Precios
         </NuxtLink>
       </div>
     </div>
@@ -79,12 +127,14 @@ import { useRoute } from 'vue-router'
 const mobileMenuOpen = ref(false)
 const route = useRoute()
 
-const isOnRecomendaciones = computed(() => {
-  // Ajusta la comparación si tu ruta tiene nombre distinto
-  return route.path === '/recomendacionesML' || route.name === 'recomendacionesML'
-})
+const pageTitles: Record<string, string> = {
+  '/': '',
+  '/recomendacionesML': 'Búsqueda Avanzada',
+  '/chatRecommendations': 'Asistente Inteligente',
+  '/propertySearch': 'Predictor de Precios'
+}
 
-const navTo = computed(() => isOnRecomendaciones.value ? '/' : '/recomendacionesML')
-const navLabel = computed(() => isOnRecomendaciones.value ? 'Volver al inicio' : 'Recomendaciones ML')
-const navIcon = computed(() => isOnRecomendaciones.value ? 'pi pi-arrow-left' : 'pi pi-star')
+const currentPageTitle = computed(() => {
+  return pageTitles[route.path] || ''
+})
 </script>

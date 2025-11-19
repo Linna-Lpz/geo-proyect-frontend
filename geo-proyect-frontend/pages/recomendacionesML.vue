@@ -163,6 +163,10 @@ import { obtenerRecomendacionesML } from '~/services/recommendationMLService'
 import Map from '~/components/Map.vue'
 import { XMarkIcon } from '@heroicons/vue/16/solid'
 
+definePageMeta({
+  title: 'Recomendaciones ML - Búsqueda Avanzada'
+});
+
 const todasLasRecomendaciones = ref<PropiedadRecomendadaML[]>([])
 const paginaActual = ref(1)
 const propiedadesPorPagina = 25
