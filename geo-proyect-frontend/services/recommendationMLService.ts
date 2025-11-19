@@ -227,50 +227,41 @@ export const getImportanciaColor = (value: number): string => {
 }
 
 /**
- * Valor de la UF en CLP
+ * Valor de la UF en CLP (no se usa más, precios ya vienen en CLP desde backend)
  */
 const VALOR_UF_CLP = 37500;
 
 /**
- * Convierte UF a CLP
+ * Convierte UF a CLP (deprecado - precios ya vienen en CLP)
  */
 export const ufToCLP = (uf: number): number => {
   return uf * VALOR_UF_CLP;
 }
 
 /**
- * Formatea precio en UF con conversión a CLP
+ * Formatea precio en CLP (los precios ya vienen normalizados desde el backend)
  */
-export const formatearPrecio = (precioUF: number): string => {
-  const precioCLP = ufToCLP(precioUF);
-  const ufFormateado = precioUF.toLocaleString('es-CL', { 
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0 
-  });
+export const formatearPrecio = (precioCLP: number): string => {
   const clpFormateado = new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     minimumFractionDigits: 0,
   }).format(precioCLP);
   
-  return `${ufFormateado} UF (≈${clpFormateado})`;
+  return clpFormateado;
 }
 
 /**
- * Formatea solo UF
+ * Formatea solo UF (deprecado - precios ya vienen en CLP)
  */
-export const formatearPrecioUF = (precioUF: number): string => {
-  return `${precioUF.toLocaleString('es-CL', { 
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0 
-  })} UF`;
+export const formatearPrecioUF = (precioCLP: number): string => {
+  return formatearPrecio(precioCLP);
 }
 
 /**
  * Formatea solo CLP
  */
-export const formatearPrecioCLP = (precioUF: number): string => {
-  const precioCLP = ufToCLP(precioUF);
+export const formatearPrecioCLP = (precioCLP: number): string => {
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',

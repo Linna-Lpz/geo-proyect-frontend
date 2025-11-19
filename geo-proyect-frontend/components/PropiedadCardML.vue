@@ -161,22 +161,18 @@ defineEmits<{
   'feedback': [data: { propiedad: PropiedadRecomendadaML, tipo: string }]
 }>()
 
-// Valor de la UF en CLP
+// Valor de la UF en CLP (no se usa más, precios ya vienen en CLP desde backend)
 const VALOR_UF_CLP = 37500;
 
-const formatearPrecio = (precioUF: number): string => {
-  const precioCLP = precioUF * VALOR_UF_CLP;
-  const ufFormateado = precioUF.toLocaleString('es-CL', { 
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0 
-  });
+const formatearPrecio = (precioCLP: number): string => {
+  // Los precios ya vienen normalizados en CLP desde el backend
   const clpFormateado = new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     minimumFractionDigits: 0,
   }).format(precioCLP);
   
-  return `${ufFormateado} UF ≈ ${clpFormateado}`;
+  return clpFormateado;
 };
 
 const getScoreColorText = (score: number): string => {
