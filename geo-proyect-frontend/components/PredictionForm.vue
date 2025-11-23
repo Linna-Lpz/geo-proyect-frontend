@@ -49,44 +49,58 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Latitud *
-          </label>
-          <input
-            v-model.number="formData.latitud"
-            type="number"
-            step="0.0001"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="-33.4489"
-          />
-        </div>
+      <!-- Mapa interactivo para seleccionar ubicación -->
+      <MapLocationPicker 
+        v-model="coordinates"
+        @update:modelValue="updateCoordinates"
+      />
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Longitud *
-          </label>
-          <input
-            v-model.number="formData.longitud"
-            type="number"
-            step="0.0001"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="-70.6693"
-          />
+      <!-- Inputs manuales opcionales (colapsables) -->
+      <details class="group">
+        <summary class="cursor-pointer text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2">
+          <i class="pi pi-pencil text-xs"></i>
+          O ingresar coordenadas manualmente
+          <i class="pi pi-chevron-down text-xs transition-transform group-open:rotate-180"></i>
+        </summary>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+          <div>
+            <label for="manual-latitud" class="block text-sm font-medium text-gray-700 mb-2">
+              Latitud
+            </label>
+            <input
+              id="manual-latitud"
+              v-model.number="coordinates.latitud"
+              type="text"
+              inputmode="decimal"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="-33.4489"
+            />
+          </div>
+
+          <div>
+            <label for="manual-longitud" class="block text-sm font-medium text-gray-700 mb-2">
+              Longitud
+            </label>
+            <input
+              id="manual-longitud"
+              v-model.number="coordinates.longitud"
+              type="text"
+              inputmode="decimal"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="-70.6693"
+            />
+          </div>
         </div>
-      </div>
+      </details>
 
       <div class="flex gap-4">
         <button
           type="submit"
           :disabled="loading"
-          class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          class="flex-1 bg-blue-700 hover:bg-blue-800 text-white py-3 px-6 rounded-lg font-semibold transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
         >
-          <span v-if="!loading">Predecir Precio</span>
-          <span v-else>Procesando...</span>
+          <span v-if="!loading"><i class="pi pi-chart-line mr-2"></i>Predecir Precio</span>
+          <span v-else><i class="pi pi-spin pi-spinner mr-2"></i>Procesando...</span>
         </button>
       </div>
 
@@ -101,11 +115,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { predictionService, type PrediccionRequest } from '~/services/predictionService';
 
 const emit = defineEmits<{
-  (e: 'prediction-success', data: any): void;
+  (e: 'prediction', data: any): void;
 }>();
 
 const formData = ref({
@@ -114,24 +128,53 @@ const formData = ref({
   banos: 2,
   estacionamientos: 0,
   bodegas: 0,
-  latitud: -33.4489,
-  longitud: -70.6693,
   usar_stacking: true
+});
+
+const coordinates = ref({
+  latitud: -33.4489,
+  longitud: -70.6693
 });
 
 const loading = ref(false);
 const error = ref('');
+
+const updateCoordinates = (newCoords: { latitud: number; longitud: number }) => {
+  coordinates.value = newCoords;
+};
 
 const handleSubmit = async () => {
   try {
     loading.value = true;
     error.value = '';
 
-    const response = await predictionService.predecirPrecio(formData.value as PrediccionRequest);
-    emit('prediction-success', response);
+    // Validar coordenadas
+    if (!coordinates.value.latitud || !coordinates.value.longitud) {
+      error.value = 'Por favor, selecciona una ubicación en el mapa o ingresa las coordenadas manualmente';
+      return;
+    }
+
+    // Combinar formData con coordinates
+    const requestData: PrediccionRequest = {
+      ...formData.value,
+      latitud: coordinates.value.latitud,
+      longitud: coordinates.value.longitud
+    };
+
+    const response = await predictionService.predecirPrecio(requestData);
+    
+    // Agregar timestamp si no viene de la API
+    const predictionData = {
+      ...response,
+      timestamp: response.timestamp || new Date().toISOString(),
+      inputs: requestData
+    };
+    
+    emit('prediction', predictionData);
 
   } catch (err: any) {
-    error.value = err.response?.data?.detail || 'Error al procesar la predicción';
+    error.value = err.message || 'Error al procesar la predicción';
+    console.error('Error en predicción:', err);
   } finally {
     loading.value = false;
   }

@@ -1,67 +1,58 @@
 <template>
-  <nav class="bg-white shadow-lg">
+  <nav class="shadow-lg border-b" style="background-color: #1e3a5f; border-color: #2c5282;">
     <div class="px-4">
-      <div class="flex justify-between items-center py-4">
+      <div class="flex justify-between items-center py-3">
         <!-- Logo -->
-        <div class="flex items-center justify-between h-16">
+        <div class="flex items-center h-14">
         <!-- Left: Logo + Company -->
-        <NuxtLink to="/" class="flex items-center space-x-3">
+        <NuxtLink to="/" class="flex items-center space-x-3 group">
           <!-- Inline logo: stylized map pin + leaf -->
-          <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-green-400 text-white">
-            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <span class="inline-flex items-center justify-center h-11 w-11 rounded-lg text-white border transition-all duration-200 hover:bg-opacity-90" style="background-color: #2c5282; border-color: #4a90d9;">
+            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 11 7 11s7-5.75 7-11c0-3.866-3.134-7-7-7z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 11.2a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4z" fill="white"/>
+              <path d="M12 11.2a2.2 2.2 0 100-4.4 2.2 2.4 0 000 4.4z" fill="white"/>
             </svg>
           </span>
 
           <div class="flex flex-col">
-            <span class="text-lg font-semibold text-slate-900 dark:text-slate-100">TerraMatch</span>
-            <span v-if="currentPageTitle" class="text-xs text-blue-600 font-medium">{{ currentPageTitle }}</span>
+            <span class="text-xl font-bold text-white group-hover:text-gray-100 transition-colors duration-200">TerraMatch</span>
+            <span v-if="currentPageTitle" class="text-xs font-medium text-gray-300">{{ currentPageTitle }}</span>
           </div>
         </NuxtLink>
-
-        <!-- Mobile menu placeholder (keeps layout consistent) -->
-        <div class="sm:hidden">
-          <button aria-label="open menu" class="p-2 rounded-md text-slate-700 hover:bg-slate-100 dark:text-slate-300">
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-          </button>
-        </div>
       </div>
 
         <!-- Navegación -->
-        <div class="hidden md:flex space-x-6">
+        <div class="hidden md:flex space-x-1">
           <NuxtLink 
             to="/"
-            class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
-            :class="{ 'text-blue-600': route.path === '/' }"
+            class="text-gray-200 hover:text-white hover:bg-blue-800 hover:bg-opacity-50 font-medium transition-all duration-200 flex items-center px-4 py-2 rounded-md"
+            :class="{ 'bg-blue-800 bg-opacity-60 text-white border-b-2 border-blue-400': route.path === '/' }"
           >
-            <i class="pi pi-home mr-1"></i>
+            <i class="pi pi-home mr-2"></i>
             Inicio
           </NuxtLink>
           <NuxtLink 
             to="/recomendacionesML"
-            class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
-            :class="{ 'text-blue-600': route.path === '/recomendacionesML' }"
+            class="text-gray-200 hover:text-white hover:bg-blue-800 hover:bg-opacity-50 font-medium transition-all duration-200 flex items-center px-4 py-2 rounded-md"
+            :class="{ 'bg-blue-800 bg-opacity-60 text-white border-b-2 border-blue-400': route.path === '/recomendacionesML' }"
           >
-            <i class="pi pi-search mr-1"></i>
+            <i class="pi pi-search mr-2"></i>
             Búsqueda Avanzada
           </NuxtLink>
-          <NuxtLink 
-            to="/chatRecommendations"
-            class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
-            :class="{ 'text-blue-600': route.path === '/chatRecommendations' }"
+          <button 
+            disabled
+            class="text-gray-400 cursor-not-allowed font-medium flex items-center px-4 py-2 rounded-md opacity-50"
+            title="Próximamente"
           >
-            <i class="pi pi-comments mr-1"></i>
+            <i class="pi pi-comments mr-2"></i>
             Asistente Inteligente
-          </NuxtLink>
+          </button>
           <NuxtLink 
             to="/propertySearch"
-            class="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center"
-            :class="{ 'text-blue-600': route.path === '/propertySearch' }"
+            class="text-gray-200 hover:text-white hover:bg-blue-800 hover:bg-opacity-50 font-medium transition-all duration-200 flex items-center px-4 py-2 rounded-md"
+            :class="{ 'bg-blue-800 bg-opacity-60 text-white border-b-2 border-blue-400': route.path === '/propertySearch' }"
           >
-            <i class="pi pi-dollar mr-1"></i>
+            <i class="pi pi-dollar mr-2"></i>
             Predictor de Precios
           </NuxtLink>
         </div>
@@ -69,7 +60,7 @@
         <!-- Mobile menu button -->
         <button 
           @click="mobileMenuOpen = !mobileMenuOpen"
-          class="md:hidden p-2 rounded-lg hover:bg-gray-100"
+          class="md:hidden p-2 rounded-md text-gray-200 hover:text-white hover:bg-blue-800 hover:bg-opacity-50 transition-colors duration-200"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -78,11 +69,11 @@
       </div>
 
       <!-- Mobile menu -->
-      <div v-if="mobileMenuOpen" class="md:hidden pb-4 space-y-2">
+      <div v-if="mobileMenuOpen" class="md:hidden pb-4 space-y-1 border-t pt-4" style="border-color: #2c5282;">
         <NuxtLink 
           to="/" 
-          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
-          :class="{ 'bg-blue-50 text-blue-600': route.path === '/' }"
+          class="block py-2 px-3 rounded-md text-gray-200 hover:bg-blue-800 hover:bg-opacity-50 hover:text-white font-medium flex items-center transition-all duration-200"
+          :class="{ 'bg-blue-800 bg-opacity-60 text-white border-l-4 border-blue-400': route.path === '/' }"
           @click="mobileMenuOpen = false"
         >
           <i class="pi pi-home mr-2"></i>
@@ -90,26 +81,25 @@
         </NuxtLink>
         <NuxtLink 
           to="/recomendacionesML"
-          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
-          :class="{ 'bg-blue-50 text-blue-600': route.path === '/recomendacionesML' }"
+          class="block py-2 px-3 rounded-md text-gray-200 hover:bg-blue-800 hover:bg-opacity-50 hover:text-white font-medium flex items-center transition-all duration-200"
+          :class="{ 'bg-blue-800 bg-opacity-60 text-white border-l-4 border-blue-400': route.path === '/recomendacionesML' }"
           @click="mobileMenuOpen = false"
         >
           <i class="pi pi-search mr-2"></i>
           Búsqueda Avanzada
         </NuxtLink>
-        <NuxtLink 
-          to="/chatRecommendations"
-          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
-          :class="{ 'bg-blue-50 text-blue-600': route.path === '/chatRecommendations' }"
-          @click="mobileMenuOpen = false"
+        <button 
+          disabled
+          class="block py-2 px-3 rounded-md text-gray-400 cursor-not-allowed font-medium flex items-center opacity-50 w-full text-left"
+          title="Próximamente"
         >
           <i class="pi pi-comments mr-2"></i>
           Asistente Inteligente
-        </NuxtLink>
+        </button>
         <NuxtLink 
           to="/propertySearch"
-          class="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-blue-600 font-medium flex items-center"
-          :class="{ 'bg-blue-50 text-blue-600': route.path === '/propertySearch' }"
+          class="block py-2 px-3 rounded-md text-gray-200 hover:bg-blue-800 hover:bg-opacity-50 hover:text-white font-medium flex items-center transition-all duration-200"
+          :class="{ 'bg-blue-800 bg-opacity-60 text-white border-l-4 border-blue-400': route.path === '/propertySearch' }"
           @click="mobileMenuOpen = false"
         >
           <i class="pi pi-dollar mr-2"></i>

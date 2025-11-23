@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-100 via-white to-indigo-100 py-8 px-4">
+  <div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4">
     <div class="container mx-auto">
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-gray-800 mb-2">
-          <i class="pi pi-home mr-2"></i>Predictor de Precios Inmobiliarios
+          <i class="pi pi-home mr-2 text-blue-700"></i>Predictor de Precios Inmobiliarios
         </h1>
         <p class="text-gray-600 text-lg">
           Estimación inteligente basada en Machine Learning
@@ -42,22 +42,22 @@
                 @click="currentPrediction = pred"
               >
                 <div class="flex items-center space-x-4">
-                  <div class="text-2xl"><i class="pi pi-home"></i></div>
+                  <div class="text-2xl text-blue-600"><i class="pi pi-home"></i></div>
                   <div>
                     <div class="font-semibold text-gray-800">
-                      {{ pred.inputs.superficie }}m² • {{ pred.inputs.dormitorios }}D/{{ pred.inputs.banos }}B
+                      {{ pred.inputs?.superficie_util || 'N/A' }}m² • {{ pred.inputs?.dormitorios || 0 }}D/{{ pred.inputs?.banos || 0 }}B
                     </div>
                     <div class="text-sm text-gray-600">
-                      {{ pred.inputs.comuna }} • {{ formatTimestamp(pred.timestamp) }}
+                      {{ formatTimestamp(pred.timestamp) }}
                     </div>
                   </div>
                 </div>
                 <div class="text-right">
                   <div class="text-lg font-bold text-blue-600">
-                    {{ formatPrice(pred.precio_predicho) }}
+                    {{ formatPrice(pred.precio_total_estimado) }}
                   </div>
                   <div class="text-xs text-gray-500">
-                    {{ formatPricePerM2(pred.precio_m2) }}
+                    {{ formatPricePerM2(pred.precio_m2_predicho) }}/m²
                   </div>
                 </div>
               </div>
@@ -69,22 +69,22 @@
         <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
           <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="pi pi-info-circle mr-2"></i>Acerca del Modelo</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div class="bg-blue-50 p-4 rounded-lg">
-              <div class="text-blue-600 font-semibold mb-1">Algoritmo</div>
+            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+              <div class="text-blue-700 font-semibold mb-1">Algoritmo</div>
               <div class="text-gray-700">Random Forest Optimizado</div>
             </div>
-            <div class="bg-green-50 p-4 rounded-lg">
-              <div class="text-green-600 font-semibold mb-1">Precisión (R²)</div>
+            <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+              <div class="text-green-700 font-semibold mb-1">Precisión (R²)</div>
               <div class="text-gray-700">91.4% (0.914)</div>
             </div>
-            <div class="bg-purple-50 p-4 rounded-lg">
-              <div class="text-purple-600 font-semibold mb-1">Features</div>
+            <div class="bg-gray-100 border border-gray-300 p-4 rounded-lg">
+              <div class="text-gray-700 font-semibold mb-1">Features</div>
               <div class="text-gray-700">16 variables predictoras</div>
             </div>
           </div>
           <div class="mt-4 text-xs text-gray-600">
             <p><strong>Comunas soportadas:</strong> Estación Central, Santiago, Ñuñoa, La Reina</p>
-            <p class="mt-2"><strong>Variables consideradas:</strong> Superficie, dormitorios, baños, comuna, distancias a servicios (metro, parques, hospitales, colegios, etc.)</p>
+            <p class="mt-2"><strong>Variables consideradas:</strong> Superficie, dormitorios, baños, ubicación (lat/lon), características calculadas</p>
           </div>
         </div>
       </div>

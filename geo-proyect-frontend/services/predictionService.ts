@@ -14,7 +14,10 @@ export interface PrediccionResponse {
   precio_m2_predicho: number;
   precio_total_estimado: number;
   confianza: number;
-  metodo_usado: string;
+  metodo: string;
+  cluster_asignado?: number;
+  predicciones_base?: any;
+  features_calculadas?: any;
   timestamp?: string;
 }
 
@@ -55,6 +58,57 @@ export class PredictionService {
       throw new Error(`Error obteniendo info del modelo: ${response.statusText}`);
     }
     return await response.json();
+  }
+
+  async healthCheck(): Promise<{ status: string }> {
+    try {
+      const response = await fetch(`${this.baseURL}/health`);
+      if (response.ok) {
+        return { status: 'healthy' };
+      }
+      return { status: 'unhealthy' };
+    } catch {
+      return { status: 'unreachable' };
+    }
+  }
+
+  formatPrice(price: number): string {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  }
+
+  formatPriceUF(priceUF: number): string {
+    return new Intl.NumberFormat('es-CL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(priceUF);
+  }
+
+  formatPricePerM2(price: number): string {
+    return `${this.formatPrice(price)}/m²`;
+  }
+
+  async getUFValue(): Promise<number> {
+    try {
+      // API del Banco Central de Chile o servicio alternativo
+      const response = await fetch('https://mindicador.cl/api/uf');
+      if (response.ok) {
+        const data = await response.json();
+        return data.serie[0].valor;
+      }
+    } catch (error) {
+      console.warn('No se pudo obtener valor UF actualizado, usando valor por defecto');
+    }
+    // Valor por defecto aproximado (actualizar manualmente si es necesario)
+    return 37500; // UF aproximada en CLP
+  }
+
+  convertUFtoCLP(uf: number, valorUF: number): number {
+    return uf * valorUF;
   }
 }
 
