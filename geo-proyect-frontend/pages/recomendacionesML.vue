@@ -131,7 +131,13 @@
           <div v-else class="bg-white rounded-xl shadow-lg p-6 text-center flex-1 flex items-center justify-center">
             <div>
               <h3 class="text-lg font-bold">Inicia una búsqueda</h3>
-              <p class="text-gray-600">Utiliza el Chatbot ML para buscar propiedades.</p>
+              <p class="text-gray-600 mb-4">Utiliza el Chatbot ML para buscar propiedades o haz una búsqueda rápida.</p>
+              <button
+                @click="busquedaRapida"
+                class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+              >
+                <i class="pi pi-search mr-2"></i> Búsqueda Rápida (Ver todas)
+              </button>
             </div>
           </div>
         </div>
@@ -266,6 +272,46 @@ const handleFeedback = (data: { propiedad: PropiedadRecomendadaML; tipo: string 
   }
   
   // TODO: Enviar feedback al backend para mejorar el modelo
+}
+
+// Búsqueda rápida sin preferencias específicas
+const busquedaRapida = async () => {
+  buscandoPropiedades.value = true
+  paginaActual.value = 1
+  todasLasRecomendaciones.value = []
+  
+  try {
+    // Búsqueda con preferencias por defecto para obtener propiedades
+    const preferenciasDefault: PreferenciasDetalladasML = {
+      peso_precio: 0.2,
+      peso_ubicacion: 0.12,
+      peso_tamano: 0.08,
+      peso_transporte: 0.15,
+      peso_educacion: 0.1,
+      peso_salud: 0.1,
+      peso_servicios: 0.08,
+      peso_areas_verdes: 0.05,
+      peso_edificio: 0.12
+    }
+    // Limitar a 500 para evitar problemas de rendimiento
+    const response = await obtenerRecomendacionesML(preferenciasDefault, 500)
+    
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    todasLasRecomendaciones.value = response.recomendaciones
+    metadataML.value = {
+      modelo_version: response.modelo_version,
+      total_propiedades_evaluadas: response.total_analizadas,
+      tiempo_procesamiento_ms: 150
+    }
+    
+    mostrarToast(`${response.recomendaciones.length} propiedades encontradas (de ${response.total_analizadas} analizadas)`)
+  } catch (error) {
+    console.error('Error en búsqueda rápida:', error)
+    mostrarToast('Error al buscar propiedades')
+  } finally {
+    buscandoPropiedades.value = false
+  }
 }
 
 const nuevaBusqueda = () => {
