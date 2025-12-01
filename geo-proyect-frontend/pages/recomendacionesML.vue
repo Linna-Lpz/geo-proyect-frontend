@@ -64,7 +64,7 @@
                 </div>
 
                 <!-- Atributos -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   <div class="bg-gray-50 rounded-lg p-3 flex items-center gap-2">
                     <i class="pi pi-home text-gray-500"></i>
                     <div>
@@ -91,6 +91,17 @@
                     <div>
                       <div class="text-xs text-gray-500">Compatibilidad</div>
                       <div :class="['font-semibold', getScoreColor(propiedadSeleccionada.score_total)]">{{ propiedadSeleccionada.score_total.toFixed(1) }}/100</div>
+                    </div>
+                  </div>
+                  <!-- Satisfacción ML (LightGBM) -->
+                  <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-3 flex items-center gap-2" v-if="propiedadSeleccionada.satisfaccion_score">
+                    <i :class="getSatisfaccionIcon(propiedadSeleccionada.satisfaccion_score)"></i>
+                    <div>
+                      <div class="text-xs text-purple-600 font-medium">Satisfacción ML</div>
+                      <div :class="['font-bold', getSatisfaccionColor(propiedadSeleccionada.satisfaccion_score)]">
+                        {{ propiedadSeleccionada.satisfaccion_score.toFixed(1) }}/10
+                      </div>
+                      <div class="text-xs text-gray-500">{{ propiedadSeleccionada.satisfaccion_nivel }}</div>
                     </div>
                   </div>
                 </div>
@@ -354,6 +365,21 @@ const getScoreIcon = (score: number): string => {
   if (score >= 60) return 'pi pi-star'
   if (score >= 40) return 'pi pi-thumbs-up'
   return 'pi pi-lightbulb'
+}
+
+// Funciones para Satisfacción ML (LightGBM)
+const getSatisfaccionColor = (score: number): string => {
+  if (score >= 8) return 'text-green-600'
+  if (score >= 6) return 'text-blue-600'
+  if (score >= 4) return 'text-orange-500'
+  return 'text-red-500'
+}
+
+const getSatisfaccionIcon = (score: number): string => {
+  if (score >= 8) return 'pi pi-star-fill text-yellow-500 text-xl'
+  if (score >= 6) return 'pi pi-check-circle text-green-500 text-xl'
+  if (score >= 4) return 'pi pi-exclamation-circle text-orange-500 text-xl'
+  return 'pi pi-times-circle text-red-500 text-xl'
 }
 </script>
 

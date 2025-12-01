@@ -132,7 +132,7 @@ export interface PropiedadRecomendadaML {
   id: number
   direccion: string
   comuna: string
-  precio: number  // Precio en UF
+  precio: number  // Precio en CLP
   superficie_util: number
   dormitorios: number
   banos: number
@@ -144,6 +144,10 @@ export interface PropiedadRecomendadaML {
   score_total: number
   score_confianza: number
   scores_por_categoria: ScoreML[]
+  
+  // Satisfacción ML (LightGBM R²=0.86)
+  satisfaccion_score?: number  // 0-10
+  satisfaccion_nivel?: string  // Excelente, Bueno, Regular, Bajo
   
   // Explicación
   resumen_explicacion: string
