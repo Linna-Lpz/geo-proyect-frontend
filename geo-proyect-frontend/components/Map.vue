@@ -171,6 +171,79 @@
               <div class="text-xs text-gray-500">{{ puntosDeInteres.bomberos.length }} cuartel(es)</div>
             </div>
           </label>
+
+          <!-- Universidades -->
+          <label 
+            v-if="puntosDeInteres.universidades?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-indigo-50 p-2 rounded-lg transition-colors border border-transparent hover:border-indigo-200"
+            :class="{ 'bg-indigo-50 border-indigo-200': filtrosServicios.universidades }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.universidades" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-indigo-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100">
+              <i class="pi pi-graduation-cap text-indigo-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Universidades</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.universidades.length }} institución(es)</div>
+            </div>
+          </label>
+
+          <!-- Bancos -->
+          <label 
+            v-if="puntosDeInteres.bancos?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-emerald-50 p-2 rounded-lg transition-colors border border-transparent hover:border-emerald-200"
+            :class="{ 'bg-emerald-50 border-emerald-200': filtrosServicios.bancos }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.bancos" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-emerald-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100">
+              <i class="pi pi-wallet text-emerald-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Bancos</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.bancos.length }} sucursal(es)</div>
+            </div>
+          </label>
+
+          <!-- Restaurantes -->
+          <label 
+            v-if="puntosDeInteres.restaurantes?.length" 
+            class="flex items-center gap-3 cursor-pointer hover:bg-orange-50 p-2 rounded-lg transition-colors border border-transparent hover:border-orange-200"
+            :class="{ 'bg-orange-50 border-orange-200': filtrosServicios.restaurantes }"
+          >
+            <input type="checkbox" v-model="filtrosServicios.restaurantes" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-orange-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-orange-100">
+              <i class="pi pi-star text-orange-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-800 text-sm">Restaurantes</div>
+              <div class="text-xs text-gray-500">{{ puntosDeInteres.restaurantes.length }} local(es)</div>
+            </div>
+          </label>
+          
+          <!-- Separador para Servicios GeoJSON -->
+          <div v-if="categoriasGeoJSON.length > 0" class="border-t border-purple-200 mt-3 pt-3">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 rounded-full bg-purple-600"></div>
+              <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Datos Originales</span>
+            </div>
+            
+            <!-- Categorías GeoJSON dinámicas -->
+            <label 
+              v-for="categoria in categoriasGeoJSON" 
+              :key="categoria"
+              class="flex items-center gap-3 cursor-pointer hover:bg-purple-50 p-2 rounded-lg transition-colors border border-transparent hover:border-purple-200"
+              :class="{ 'bg-purple-50 border-purple-200': filtrosServiciosGeoJSON[categoria] }"
+            >
+              <input type="checkbox" v-model="filtrosServiciosGeoJSON[categoria]" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-purple-600" />
+              <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 border-2 border-purple-300">
+                <i :class="`pi pi-${iconosCategoriasGeoJSON[categoria] || 'map-marker'} text-purple-600 text-lg`"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-semibold text-gray-800 text-sm">{{ nombresCategoriasGeoJSON[categoria] || categoria }}</div>
+                <div class="text-xs text-purple-500">{{ serviciosGeoJSON?.categorias[categoria]?.length || 0 }} punto(s)</div>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -181,7 +254,7 @@
             <i class="pi pi-check-circle text-green-600"></i>
             Total encontrados
           </span>
-          <span class="font-bold text-blue-600">{{ puntosDeInteres.total_encontrados || 0 }}</span>
+          <span class="font-bold text-blue-600">{{ (puntosDeInteres.total_encontrados || 0) + (serviciosGeoJSON?.total_encontrados || 0) }}</span>
         </div>
       </div>
     </div>
@@ -351,6 +424,31 @@
                     <div class="text-xs text-gray-500">{{ puntosDeInteres.comisarias.length }} comisaría(s)</div>
                   </div>
                 </label>
+                
+                <!-- Separador para Servicios GeoJSON (Fullscreen) -->
+                <div v-if="categoriasGeoJSON.length > 0" class="border-t border-purple-200 mt-3 pt-3">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-3 h-3 rounded-full bg-purple-600"></div>
+                    <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Datos Originales</span>
+                  </div>
+                  
+                  <!-- Categorías GeoJSON dinámicas -->
+                  <label 
+                    v-for="categoria in categoriasGeoJSON" 
+                    :key="categoria"
+                    class="flex items-center gap-3 cursor-pointer hover:bg-purple-50 p-2 rounded-lg transition-colors border border-transparent hover:border-purple-200"
+                    :class="{ 'bg-purple-50 border-purple-200': filtrosServiciosGeoJSON[categoria] }"
+                  >
+                    <input type="checkbox" v-model="filtrosServiciosGeoJSON[categoria]" @change="actualizarMarcadores" class="w-4 h-4 cursor-pointer accent-purple-600" />
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 border-2 border-purple-300">
+                      <i :class="`pi pi-${iconosCategoriasGeoJSON[categoria] || 'map-marker'} text-purple-600 text-lg`"></i>
+                    </div>
+                    <div class="flex-1">
+                      <div class="font-semibold text-gray-800 text-sm">{{ nombresCategoriasGeoJSON[categoria] || categoria }}</div>
+                      <div class="text-xs text-purple-500">{{ serviciosGeoJSON?.categorias[categoria]?.length || 0 }} punto(s)</div>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <!-- Resumen -->
@@ -360,7 +458,7 @@
                     <i class="pi pi-check-circle text-green-600"></i>
                     Total encontrados
                   </span>
-                  <span class="font-bold text-gray-800">{{ puntosDeInteres.total_encontrados || 0 }}</span>
+                  <span class="font-bold text-gray-800">{{ (puntosDeInteres.total_encontrados || 0) + (serviciosGeoJSON?.total_encontrados || 0) }}</span>
                 </div>
               </div>
             </div>
@@ -375,7 +473,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { obtenerPuntosDeInteresCercanos, type PointOfInterest, type PointsOfInterestResponse } from '~/services/pointsOfInterestService';
+import { obtenerPuntosDeInteresCercanos, obtenerServiciosGeoJSON, type PointOfInterest, type PointsOfInterestResponse, type ServiciosGeoJSONResponse } from '~/services/pointsOfInterestService';
 import { recommendationService } from '~/services/recommendationService';
 
 interface Property {
@@ -415,13 +513,67 @@ const isFullscreen = ref<boolean>(false);
 const filtrosServicios = ref({
   metros: true,
   colegios: true,
+  universidades: true,
   centros_medicos: true,
   supermercados: true,
   parques: true,
   farmacias: true,
   comisarias: true,
-  bomberos: true
+  bomberos: true,
+  bancos: true,
+  restaurantes: true,
+  correos: true,
+  gasolineras: true,
+  cajeros: true,
+  otros_servicios: true,
+  otros_comercios: true
 });
+
+// Servicios GeoJSON (datos originales) - con marcadores morados
+const serviciosGeoJSON = ref<ServiciosGeoJSONResponse | null>(null);
+let geoJsonMarkers: L.Marker[] = []; // Marcadores separados para servicios GeoJSON
+
+// Filtros para servicios GeoJSON
+const filtrosServiciosGeoJSON = ref<Record<string, boolean>>({});
+
+// Categorías disponibles de servicios GeoJSON
+const categoriasGeoJSON = ref<string[]>([]);
+
+// Mapa de nombres amigables para categorías GeoJSON
+const nombresCategoriasGeoJSON: Record<string, string> = {
+  'establecimientos_educacionales': 'Colegios (GeoJSON)',
+  'centros_de_salud': 'Centros de Salud',
+  'hospitales': 'Hospitales',
+  'farmacias': 'Farmacias (GeoJSON)',
+  'supermercados': 'Supermercados (GeoJSON)',
+  'restaurantes': 'Restaurantes',
+  'parques': 'Parques (GeoJSON)',
+  'deporte': 'Deportes',
+  'bancos': 'Bancos',
+  'cajeros': 'Cajeros',
+  'correos': 'Correos',
+  'policia': 'Policía (GeoJSON)',
+  'bomberos': 'Bomberos (GeoJSON)',
+  'transporte_publico': 'Transporte Público'
+};
+
+// Iconos para categorías GeoJSON
+const iconosCategoriasGeoJSON: Record<string, string> = {
+  'establecimientos_educacionales': 'graduation-cap',
+  'centros_de_salud': 'heart',
+  'hospitales': 'building',
+  'farmacias': 'plus',
+  'supermercados': 'shopping-bag',
+  'restaurantes': 'star',
+  'parques': 'sun',
+  'deporte': 'flag',
+  'bancos': 'wallet',
+  'cajeros': 'credit-card',
+  'correos': 'envelope',
+  'policia': 'shield',
+  'bomberos': 'bolt',
+  'transporte_publico': 'car'
+};
 
 onMounted(() => {
   initMap();
@@ -607,7 +759,13 @@ const cargarPuntosDeInteresCercanos = async (latitud: number, longitud: number, 
   try {
     loadingPOI.value = true;
     const radioActual = radio || searchRadius.value;
+    
+    // Cargar servicios tradicionales
     puntosDeInteres.value = await obtenerPuntosDeInteresCercanos(latitud, longitud, radioActual);
+    
+    // Cargar servicios GeoJSON (datos originales)
+    await cargarServiciosGeoJSON(latitud, longitud, radioActual);
+    
     if (showPOI.value) {
       mostrarPuntosDeInteres();
       mostrarCirculoRadio(); // Mostrar círculo al cargar servicios
@@ -616,6 +774,28 @@ const cargarPuntosDeInteresCercanos = async (latitud: number, longitud: number, 
     console.error('Error cargando puntos de interés:', error);
   } finally {
     loadingPOI.value = false;
+  }
+};
+
+// Función para cargar servicios GeoJSON (datos originales)
+const cargarServiciosGeoJSON = async (latitud: number, longitud: number, radio: number) => {
+  try {
+    serviciosGeoJSON.value = await obtenerServiciosGeoJSON(latitud, longitud, radio);
+    
+    // Inicializar filtros para todas las categorías encontradas
+    if (serviciosGeoJSON.value && serviciosGeoJSON.value.categorias) {
+      const categorias = Object.keys(serviciosGeoJSON.value.categorias);
+      categoriasGeoJSON.value = categorias;
+      
+      // Activar todos los filtros por defecto
+      categorias.forEach(cat => {
+        if (!(cat in filtrosServiciosGeoJSON.value)) {
+          filtrosServiciosGeoJSON.value[cat] = true;
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error cargando servicios GeoJSON:', error);
   }
 };
 
@@ -654,6 +834,129 @@ const mostrarPuntosDeInteres = () => {
   if (filtrosServicios.value.bomberos) {
     pois.bomberos?.forEach(poi => agregarMarcadorPOI(poi, 'fire', '#DC2626', 'Bomberos', activeMap));
   }
+  if (filtrosServicios.value.universidades) {
+    pois.universidades?.forEach(poi => agregarMarcadorPOI(poi, 'graduation-cap', '#6366F1', 'Universidad', activeMap));
+  }
+  if (filtrosServicios.value.bancos) {
+    pois.bancos?.forEach(poi => agregarMarcadorPOI(poi, 'wallet', '#059669', 'Banco', activeMap));
+  }
+  if (filtrosServicios.value.restaurantes) {
+    pois.restaurantes?.forEach(poi => agregarMarcadorPOI(poi, 'star', '#F97316', 'Restaurante', activeMap));
+  }
+  if (filtrosServicios.value.correos) {
+    pois.correos?.forEach(poi => agregarMarcadorPOI(poi, 'envelope', '#7C3AED', 'Correo', activeMap));
+  }
+  if (filtrosServicios.value.gasolineras) {
+    pois.gasolineras?.forEach(poi => agregarMarcadorPOI(poi, 'car', '#EC4899', 'Gasolinera', activeMap));
+  }
+  if (filtrosServicios.value.cajeros) {
+    pois.cajeros?.forEach(poi => agregarMarcadorPOI(poi, 'credit-card', '#14B8A6', 'Cajero', activeMap));
+  }
+  if (filtrosServicios.value.otros_servicios) {
+    pois.otros_servicios?.forEach(poi => agregarMarcadorPOI(poi, 'wrench', '#6B7280', 'Otro Servicio', activeMap));
+  }
+  if (filtrosServicios.value.otros_comercios) {
+    pois.otros_comercios?.forEach(poi => agregarMarcadorPOI(poi, 'shop', '#9CA3AF', 'Otro Comercio', activeMap));
+  }
+  
+  // Mostrar servicios GeoJSON (datos originales) con marcadores morados
+  mostrarServiciosGeoJSON(activeMap);
+};
+
+// Función para mostrar servicios GeoJSON con marcadores morados
+const mostrarServiciosGeoJSON = (targetMap: L.Map) => {
+  if (!targetMap || !serviciosGeoJSON.value) return;
+  
+  // Limpiar marcadores GeoJSON anteriores
+  limpiarMarcadoresGeoJSON();
+  
+  const categorias = serviciosGeoJSON.value.categorias;
+  
+  // Iterar sobre cada categoría y mostrar los que estén activos en filtros
+  Object.entries(categorias).forEach(([categoria, servicios]) => {
+    if (filtrosServiciosGeoJSON.value[categoria] && servicios) {
+      const icono = iconosCategoriasGeoJSON[categoria] || 'map-marker';
+      const nombreCategoria = nombresCategoriasGeoJSON[categoria] || categoria;
+      
+      servicios.forEach((servicio: PointOfInterest) => {
+        agregarMarcadorGeoJSON(servicio, icono, nombreCategoria, targetMap);
+      });
+    }
+  });
+};
+
+// Función auxiliar para agregar marcador GeoJSON (siempre morado)
+const agregarMarcadorGeoJSON = (poi: PointOfInterest, icono: string, categoria: string, targetMap: L.Map) => {
+  if (!targetMap) return;
+  
+  // Color morado para todos los servicios GeoJSON
+  const color = '#9333EA'; // Morado
+  
+  const iconHtml = `
+    <div style="
+      background-color: ${color};
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 3px solid #C084FC;
+      box-shadow: 0 2px 8px rgba(147, 51, 234, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <i class="${iconClass(icono)}" style="font-size:14px;color:white"></i>
+    </div>
+  `;
+  
+  const customIcon = L.divIcon({
+    html: iconHtml,
+    className: 'custom-geojson-marker',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+  });
+  
+  const marker = L.marker([poi.latitud, poi.longitud], {
+    icon: customIcon,
+    opacity: 0.9
+  }).addTo(targetMap);
+  
+  // Popup con información
+  const distanciaTexto = poi.distancia ? `<div class="text-sm text-gray-600 mt-1"><i class="pi pi-map-marker"></i> ${Math.round(poi.distancia)}m</div>` : '';
+  const direccionTexto = poi.direccion ? `<div class="text-xs text-gray-500 mt-1">${poi.direccion}</div>` : '';
+  
+  // Mostrar propiedades adicionales si existen
+  let propiedadesHtml = '';
+  if (poi.propiedades) {
+    Object.entries(poi.propiedades).forEach(([key, value]) => {
+      if (value && key !== 'geometry' && key !== 'id') {
+        propiedadesHtml += `<div class="text-xs text-gray-500">${key}: ${value}</div>`;
+      }
+    });
+  }
+  
+  marker.bindPopup(`
+    <div style="min-width: 180px; max-width: 280px;">
+      <div style="text-align: center; border-bottom: 2px solid ${color}; padding-bottom: 8px; margin-bottom: 8px;">
+        <strong style="font-size: 12px; color: ${color};"><i class="${iconClass(icono)}"></i> ${categoria}</strong>
+      </div>
+      <div style="font-weight: 600; margin-bottom: 6px; font-size: 13px;">${poi.nombre || 'Sin nombre'}</div>
+      ${distanciaTexto}
+      ${direccionTexto}
+      ${propiedadesHtml}
+      <div class="text-xs text-purple-600 mt-2 italic">📍 Datos originales</div>
+    </div>
+  `, {
+    maxWidth: 280,
+    className: 'geojson-popup'
+  });
+  
+  geoJsonMarkers.push(marker);
+};
+
+// Función para limpiar marcadores GeoJSON
+const limpiarMarcadoresGeoJSON = () => {
+  geoJsonMarkers.forEach(marker => marker.remove());
+  geoJsonMarkers = [];
 };
 
 // Función auxiliar para agregar un marcador de POI
@@ -717,6 +1020,7 @@ const agregarMarcadorPOI = (poi: PointOfInterest, emoji: string, color: string, 
 const limpiarPuntosDeInteres = () => {
   poiMarkers.forEach(marker => marker.remove());
   poiMarkers = [];
+  limpiarMarcadoresGeoJSON(); // Limpiar marcadores GeoJSON también
   limpiarCirculoRadio(); // Limpiar círculo también
 };
 

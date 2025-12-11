@@ -56,6 +56,21 @@
                 <div class="flex items-start justify-between gap-4">
                   <div class="flex items-start gap-3">
                     <div>
+                      <!-- Badge de tipo de propiedad -->
+                      <span :class="[
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mb-2',
+                        propiedadSeleccionada.tipo_propiedad?.toLowerCase().includes('departamento') || propiedadSeleccionada.tipo_propiedad?.toLowerCase().includes('depto')
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-green-100 text-green-800'
+                      ]">
+                        <i :class="[
+                          'mr-1',
+                          propiedadSeleccionada.tipo_propiedad?.toLowerCase().includes('departamento') || propiedadSeleccionada.tipo_propiedad?.toLowerCase().includes('depto')
+                            ? 'pi pi-building'
+                            : 'pi pi-home'
+                        ]"></i>
+                        {{ propiedadSeleccionada.tipo_propiedad || 'Propiedad' }}
+                      </span>
                       <p class="text-gray-900"><strong>Dirección:</strong> {{ propiedadSeleccionada.direccion }}</p>
                       <p class="text-gray-900 mt-1"><strong>Comuna:</strong> {{ propiedadSeleccionada.comuna }}</p>
                       <p class="mt-1"><strong>Precio estimado:</strong> {{ formatearPrecio(propiedadSeleccionada.precio) }}</p>
@@ -175,9 +190,9 @@ import { ref, computed } from 'vue'
 import type {
   PreferenciasDetalladasML,
   PropiedadRecomendadaML
-} from '~/services/recommendationMLService'
-import { obtenerRecomendacionesML } from '~/services/recommendationMLService'
-import Map from '~/components/Map.vue'
+} from '../services/recommendationMLService'
+import { obtenerRecomendacionesML } from '../services/recommendationMLService'
+import Map from '../components/Map.vue'
 import { XMarkIcon } from '@heroicons/vue/16/solid'
 
 definePageMeta({

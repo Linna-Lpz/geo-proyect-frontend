@@ -97,6 +97,9 @@ export interface PreferenciasDetalladasML {
   comunas_preferidas?: string[]
   comunas_evitar?: string[]
   
+  // Tipo de inmueble
+  tipo_inmueble_preferido?: string  // 'Casa' o 'Departamento'
+  
   // Preferencias por categoría
   transporte?: PreferenciasTransporte
   educacion?: PreferenciasEducacion
@@ -132,6 +135,7 @@ export interface PropiedadRecomendadaML {
   id: number
   direccion: string
   comuna: string
+  tipo_propiedad: string  // Casa, Departamento, etc.
   precio: number  // Precio en CLP
   superficie_util: number
   dormitorios: number

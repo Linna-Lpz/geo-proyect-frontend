@@ -51,7 +51,7 @@
           <div class="text-sm opacity-90">Precisión (R²)</div>
         </div>
         <div class="bg-blue-600 rounded-lg p-6 text-white text-center shadow-md hover:shadow-lg transition-shadow">
-          <div class="text-4xl font-bold mb-2">7</div>
+          <div class="text-4xl font-bold mb-2">4</div>
           <div class="text-sm opacity-90">Comunas</div>
         </div>
         <div class="bg-gray-600 rounded-lg p-6 text-white text-center shadow-md hover:shadow-lg transition-shadow">

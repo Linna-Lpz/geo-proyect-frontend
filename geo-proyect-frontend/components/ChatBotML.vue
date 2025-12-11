@@ -251,7 +251,7 @@ const temasSeleccionados = ref<string[]>([]);
 const currentSliderValue = ref(0);
 
 // Range input temporal state
-const tempRangeMin = ref<number>(1);
+const tempRangeMin = ref<number>(10000);
 const tempRangeMax = ref<number>(1000000);
 
 const searchStarted = ref(false);
@@ -471,7 +471,7 @@ const submitRangeInput = (action?: string) => {
   }
   
   // Resetear valores
-  tempRangeMin.value = 1;
+  tempRangeMin.value = 10000;
   tempRangeMax.value = 1000000;
 };
 
@@ -499,9 +499,9 @@ const preguntarPresupuesto = () => {
     rangeInputConfig: {
       minLabel: 'Precio Mínimo (CLP)',
       maxLabel: 'Precio Máximo (CLP)',
-      minPlaceholder: '100.000',
+      minPlaceholder: '10.000',
       maxPlaceholder: '1.000.000',
-      minValue: 1,
+      minValue: 10000,
       action: 'presupuesto'
     }
   });
@@ -509,10 +509,10 @@ const preguntarPresupuesto = () => {
 
 const handlePresupuestoResponse = (value: { min: number; max: number }) => {
   // Validar que min sea al menos 1 y que max sea mayor que min
-  if (value.min < 1) {
+  if (value.min < 10000) {
     addMessage({
       sender: 'bot',
-      text: '<p class="text-red-600">⚠️ El precio mínimo debe ser al menos $1</p>',
+      text: '<p class="text-red-600">⚠️ El precio mínimo debe ser al menos $10.000</p>',
     });
     preguntarPresupuesto();
     return;
@@ -866,6 +866,9 @@ const finalizarConversacion = () => {
       // Ubicación
       comunas_preferidas: preferencias.value.comunas_preferidas,
       
+      // Tipo de inmueble
+      tipo_inmueble_preferido: preferencias.value.tipo_inmueble_preferido,
+      
       // Pesos globales NORMALIZADOS (suman 1.0)
       peso_precio: sumaTotal > 0 ? pesosRaw.precio / sumaTotal : 0.20,
       peso_ubicacion: sumaTotal > 0 ? pesosRaw.ubicacion / sumaTotal : 0.20,
@@ -982,6 +985,9 @@ const ejecutarBusqueda = () => {
       
       // Ubicación
       comunas_preferidas: preferencias.value.comunas_preferidas,
+      
+      // Tipo de inmueble
+      tipo_inmueble_preferido: preferencias.value.tipo_inmueble_preferido,
       
       // Pesos globales NORMALIZADOS (suman 1.0)
       peso_precio: sumaTotal > 0 ? pesosRaw.precio / sumaTotal : 0.20,
