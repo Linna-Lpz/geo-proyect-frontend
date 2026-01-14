@@ -32,6 +32,14 @@
             Inicio
           </NuxtLink>
           <NuxtLink 
+            to="/dashboard"
+            class="text-gray-200 hover:text-white hover:bg-blue-800 hover:bg-opacity-50 font-medium transition-all duration-200 flex items-center px-4 py-2 rounded-md"
+            :class="{ 'bg-blue-800 bg-opacity-60 text-white border-b-2 border-blue-400': route.path === '/dashboard' }"
+          >
+            <i class="pi pi-chart-bar mr-2"></i>
+            Dashboard
+          </NuxtLink>
+          <NuxtLink 
             to="/recomendacionesML"
             class="text-gray-200 hover:text-white hover:bg-blue-800 hover:bg-opacity-50 font-medium transition-all duration-200 flex items-center px-4 py-2 rounded-md"
             :class="{ 'bg-blue-800 bg-opacity-60 text-white border-b-2 border-blue-400': route.path === '/recomendacionesML' }"
@@ -39,14 +47,6 @@
             <i class="pi pi-search mr-2"></i>
             Búsqueda Avanzada
           </NuxtLink>
-          <button 
-            disabled
-            class="text-gray-400 cursor-not-allowed font-medium flex items-center px-4 py-2 rounded-md opacity-50"
-            title="Próximamente"
-          >
-            <i class="pi pi-comments mr-2"></i>
-            Asistente Inteligente
-          </button>
           <NuxtLink 
             to="/propertySearch"
             class="text-gray-200 hover:text-white hover:bg-blue-800 hover:bg-opacity-50 font-medium transition-all duration-200 flex items-center px-4 py-2 rounded-md"
@@ -80,6 +80,15 @@
           Inicio
         </NuxtLink>
         <NuxtLink 
+          to="/dashboard" 
+          class="block py-2 px-3 rounded-md text-gray-200 hover:bg-blue-800 hover:bg-opacity-50 hover:text-white font-medium flex items-center transition-all duration-200"
+          :class="{ 'bg-blue-800 bg-opacity-60 text-white border-l-4 border-blue-400': route.path === '/dashboard' }"
+          @click="mobileMenuOpen = false"
+        >
+          <i class="pi pi-chart-bar mr-2"></i>
+          Dashboard
+        </NuxtLink>
+        <NuxtLink 
           to="/recomendacionesML"
           class="block py-2 px-3 rounded-md text-gray-200 hover:bg-blue-800 hover:bg-opacity-50 hover:text-white font-medium flex items-center transition-all duration-200"
           :class="{ 'bg-blue-800 bg-opacity-60 text-white border-l-4 border-blue-400': route.path === '/recomendacionesML' }"
@@ -88,14 +97,6 @@
           <i class="pi pi-search mr-2"></i>
           Búsqueda Avanzada
         </NuxtLink>
-        <button 
-          disabled
-          class="block py-2 px-3 rounded-md text-gray-400 cursor-not-allowed font-medium flex items-center opacity-50 w-full text-left"
-          title="Próximamente"
-        >
-          <i class="pi pi-comments mr-2"></i>
-          Asistente Inteligente
-        </button>
         <NuxtLink 
           to="/propertySearch"
           class="block py-2 px-3 rounded-md text-gray-200 hover:bg-blue-800 hover:bg-opacity-50 hover:text-white font-medium flex items-center transition-all duration-200"
@@ -119,6 +120,7 @@ const route = useRoute()
 
 const pageTitles: Record<string, string> = {
   '/': '',
+  '/dashboard': 'Dashboard',
   '/recomendacionesML': 'Búsqueda Avanzada',
   '/chatRecommendations': 'Asistente Inteligente',
   '/propertySearch': 'Predictor de Precios'

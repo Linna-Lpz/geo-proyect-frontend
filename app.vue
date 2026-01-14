@@ -17,6 +17,7 @@ const route = useRoute();
 const getPageTitle = (path: string): string => {
   const titles: Record<string, string> = {
     '/': 'Inicio',
+    '/dashboard': 'Dashboard Analítico',
     '/chatRecommendations': 'Asistente Inteligente',
     '/propertySearch': 'Predictor de Precios',
     '/recomendacionesML': 'Búsqueda Avanzada ML'
