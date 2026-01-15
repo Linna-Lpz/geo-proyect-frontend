@@ -130,7 +130,7 @@
                   class="text-xs text-gray-600 bg-blue-50 p-2 rounded"
                 >
                   <i class="pi pi-info-circle mr-1"></i>
-                  Rango: ${{ tempRangeMin.toLocaleString() }} - ${{ tempRangeMax.toLocaleString() }}
+                  Rango: ${{ tempRangeMin.toLocaleString('es-CL') }} - ${{ tempRangeMax.toLocaleString('es-CL') }} CLP
                 </div>
                 <button
                   @click="submitRangeInput(message.rangeInputConfig.action)"
@@ -232,6 +232,14 @@ interface PreferenciasTemp {
   evitar_hospitales?: boolean;
   evitar_metro?: boolean;
   ruido_ambiente?: 'bajo' | 'medio' | 'alto';
+  // Nuevos campos de características del edificio
+  orientacion?: string;
+  tiene_patio?: 'si' | 'no' | 'indiferente';
+  cerca_recreacion?: 'si' | 'no' | 'indiferente';
+  superficie_min?: number;
+  banos_minimo?: number;
+  piso_preferido?: 'bajo' | 'medio' | 'alto' | 'indiferente';
+  gastos_comunes_max?: number;
 }
 
 const emit = defineEmits<{
@@ -251,8 +259,8 @@ const temasSeleccionados = ref<string[]>([]);
 const currentSliderValue = ref(0);
 
 // Range input temporal state
-const tempRangeMin = ref<number>(10000);
-const tempRangeMax = ref<number>(1000000);
+const tempRangeMin = ref<number>(50000000);
+const tempRangeMax = ref<number>(200000000);
 
 const searchStarted = ref(false);
 
@@ -268,7 +276,18 @@ const preferencias = ref<Partial<PreferenciasTemp>>({
   evitar_colegios: false,
   evitar_hospitales: false,
   evitar_metro: false,
+  // Valores por defecto para características del edificio
+  orientacion: undefined,
+  tiene_patio: 'indiferente',
+  cerca_recreacion: 'indiferente',
+  superficie_min: undefined,
+  banos_minimo: 1,
+  piso_preferido: 'indiferente',
+  gastos_comunes_max: undefined,
 });
+
+// Índice para sub-preguntas de edificio
+let indiceEdificioActual = 0;
 
 let indiceTemaActual = 0;
 
@@ -349,6 +368,27 @@ const handleOptionClick = (option: { label: string; value: any; action: string }
       break;
     case 'edificio_estacionamiento':
       handleEdificioEstacionamiento(option.value);
+      break;
+    case 'edificio_orientacion':
+      handleEdificioOrientacion(option.value);
+      break;
+    case 'edificio_patio':
+      handleEdificioPatio(option.value);
+      break;
+    case 'edificio_recreacion':
+      handleEdificioRecreacion(option.value);
+      break;
+    case 'edificio_superficie':
+      handleEdificioSuperficie(option.value);
+      break;
+    case 'edificio_banos':
+      handleEdificioBanos(option.value);
+      break;
+    case 'edificio_piso':
+      handleEdificioPiso(option.value);
+      break;
+    case 'edificio_gastos':
+      handleEdificioGastos(option.value);
       break;
     case 'ambiente_ruido':
       handleAmbienteRuido(option.value);
@@ -451,8 +491,8 @@ const submitRangeInput = (action?: string) => {
     return;
   }
   
-  if (min < 1) {
-    alert('El precio mínimo debe ser al menos $1');
+  if (min < 10000000) {
+    alert('El precio mínimo debe ser al menos $10.000.000 CLP');
     return;
   }
   
@@ -462,7 +502,7 @@ const submitRangeInput = (action?: string) => {
   }
   
   // Mostrar mensaje del usuario con el rango seleccionado
-  const mensaje = `Presupuesto: $${min.toLocaleString()} - $${max.toLocaleString()}`;
+  const mensaje = `Presupuesto: $${min.toLocaleString('es-CL')} - $${max.toLocaleString('es-CL')} CLP`;
   addUserMessage(mensaje);
   
   // Ejecutar acción según el tipo
@@ -471,8 +511,8 @@ const submitRangeInput = (action?: string) => {
   }
   
   // Resetear valores
-  tempRangeMin.value = 10000;
-  tempRangeMax.value = 1000000;
+  tempRangeMin.value = 50000000;
+  tempRangeMax.value = 200000000;
 };
 
 // Helper para etiquetas de importancia
@@ -494,25 +534,25 @@ const getImportanceLabel = (value: number): string => {
 const preguntarPresupuesto = () => {
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-money-bill mr-1"></i> ¿Cuál es tu presupuesto?</p><p class="text-sm text-gray-600">Pregunta obligatoria (1/4) - Define el rango mínimo y máximo</p>',
+    text: '<p class="font-semibold"><i class="pi pi-money-bill mr-1"></i> ¿Cuál es tu presupuesto?</p><p class="text-sm text-gray-600">Pregunta obligatoria (1/4) - Define el rango mínimo y máximo en pesos chilenos</p>',
     requiresRangeInput: true,
     rangeInputConfig: {
-      minLabel: 'Precio Mínimo (CLP)',
-      maxLabel: 'Precio Máximo (CLP)',
-      minPlaceholder: '10.000',
-      maxPlaceholder: '1.000.000',
-      minValue: 10000,
+      minLabel: 'Precio Mínimo ($CLP)',
+      maxLabel: 'Precio Máximo ($CLP)',
+      minPlaceholder: 'Ej: 50.000.000',
+      maxPlaceholder: 'Ej: 200.000.000',
+      minValue: 10000000,
       action: 'presupuesto'
     }
   });
 };
 
 const handlePresupuestoResponse = (value: { min: number; max: number }) => {
-  // Validar que min sea al menos 1 y que max sea mayor que min
-  if (value.min < 10000) {
+  // Validar que min sea al menos 10 millones CLP y que max sea mayor que min
+  if (value.min < 10000000) {
     addMessage({
       sender: 'bot',
-      text: '<p class="text-red-600">⚠️ El precio mínimo debe ser al menos $10.000</p>',
+      text: '<p class="text-red-600">⚠️ El precio mínimo debe ser al menos $10.000.000 CLP</p>',
     });
     preguntarPresupuesto();
     return;
@@ -736,10 +776,71 @@ const handlePrioridadAreasVerdes = (value: number) => {
   preguntarSiguienteTema();
 };
 
+// ============================================================================
+// PREGUNTAS DE CARACTERÍSTICAS DEL EDIFICIO (SUB-FLUJO)
+// ============================================================================
+
+const preguntasEdificio = [
+  'estacionamiento',
+  'orientacion',
+  'patio',
+  'recreacion',
+  'superficie',
+  'banos',
+  'piso',
+  'gastos'
+];
+
 const preguntarEdificio = () => {
+  indiceEdificioActual = 0;
+  preguntarSiguientePreguntaEdificio();
+};
+
+const preguntarSiguientePreguntaEdificio = () => {
+  if (indiceEdificioActual >= preguntasEdificio.length) {
+    // Terminó todas las preguntas de edificio
+    preguntarSiguienteTema();
+    return;
+  }
+  
+  const pregunta = preguntasEdificio[indiceEdificioActual];
+  indiceEdificioActual++;
+  
+  switch (pregunta) {
+    case 'estacionamiento':
+      preguntarEdificioEstacionamiento();
+      break;
+    case 'orientacion':
+      preguntarEdificioOrientacion();
+      break;
+    case 'patio':
+      preguntarEdificioPatio();
+      break;
+    case 'recreacion':
+      preguntarEdificioRecreacion();
+      break;
+    case 'superficie':
+      preguntarEdificioSuperficie();
+      break;
+    case 'banos':
+      preguntarEdificioBanos();
+      break;
+    case 'piso':
+      preguntarEdificioPiso();
+      break;
+    case 'gastos':
+      preguntarEdificioGastos();
+      break;
+    default:
+      preguntarSiguientePreguntaEdificio();
+  }
+};
+
+// Pregunta 1: Estacionamiento
+const preguntarEdificioEstacionamiento = () => {
   addMessage({
     sender: 'bot',
-  text: '<p class="font-semibold"><i class="pi pi-building mr-1"></i> Características del Edificio - ¿Necesitas estacionamiento?</p>',
+    text: '<p class="font-semibold"><i class="pi pi-building mr-1"></i> Características del Edificio (1/8)</p><p class="text-sm text-gray-600 mt-1">¿Necesitas estacionamiento?</p>',
     options: [
       { label: 'Sí, es indispensable', value: true, action: 'edificio_estacionamiento' },
       { label: 'No es necesario', value: false, action: 'edificio_estacionamiento' },
@@ -749,7 +850,163 @@ const preguntarEdificio = () => {
 
 const handleEdificioEstacionamiento = (value: boolean) => {
   preferencias.value.requiere_estacionamiento = value;
-  preguntarSiguienteTema();
+  preguntarSiguientePreguntaEdificio();
+};
+
+// Pregunta 2: Orientación
+const preguntarEdificioOrientacion = () => {
+  addMessage({
+    sender: 'bot',
+    text: `
+      <div>
+        <p class="font-semibold"><i class="pi pi-compass mr-1"></i> Características del Edificio (2/8)</p>
+        <p class="text-sm text-gray-600 mt-1">¿Qué orientación prefieres para la propiedad?</p>
+        <div class="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded">
+          <p><i class="pi pi-info-circle mr-1"></i> <strong>Orientación:</strong></p>
+          <p>• <strong>Norte:</strong> Mayor luz solar todo el día, ideal para invierno</p>
+          <p>• <strong>Oriente:</strong> Sol de mañana, fresco en tardes de verano</p>
+          <p>• <strong>Poniente:</strong> Sol de tarde, más cálido en verano</p>
+          <p>• <strong>Sur:</strong> Menos luz directa, más fresco en verano</p>
+        </div>
+      </div>
+    `,
+    options: [
+      { label: '☀️ Norte (máxima luz)', value: 'norte', action: 'edificio_orientacion' },
+      { label: '🌅 Oriente (sol de mañana)', value: 'oriente', action: 'edificio_orientacion' },
+      { label: '🌇 Poniente (sol de tarde)', value: 'poniente', action: 'edificio_orientacion' },
+      { label: '🌙 Sur (fresco)', value: 'sur', action: 'edificio_orientacion' },
+      { label: 'Indiferente', value: '', action: 'edificio_orientacion' },
+    ],
+  });
+};
+
+const handleEdificioOrientacion = (value: string) => {
+  preferencias.value.orientacion = value || undefined;
+  preguntarSiguientePreguntaEdificio();
+};
+
+// Pregunta 3: Patio
+const preguntarEdificioPatio = () => {
+  addMessage({
+    sender: 'bot',
+    text: '<p class="font-semibold"><i class="pi pi-sun mr-1"></i> Características del Edificio (3/8)</p><p class="text-sm text-gray-600 mt-1">¿Te gustaría que tenga patio o terraza?</p>',
+    options: [
+      { label: 'Sí, es importante', value: 'si', action: 'edificio_patio' },
+      { label: 'No lo necesito', value: 'no', action: 'edificio_patio' },
+      { label: 'Indiferente', value: 'indiferente', action: 'edificio_patio' },
+    ],
+  });
+};
+
+const handleEdificioPatio = (value: string) => {
+  preferencias.value.tiene_patio = value as 'si' | 'no' | 'indiferente';
+  preguntarSiguientePreguntaEdificio();
+};
+
+// Pregunta 4: Zonas de recreación
+const preguntarEdificioRecreacion = () => {
+  addMessage({
+    sender: 'bot',
+    text: '<p class="font-semibold"><i class="pi pi-heart mr-1"></i> Características del Edificio (4/8)</p><p class="text-sm text-gray-600 mt-1">¿Te gustaría estar cerca de zonas de recreación (gimnasio, piscina, áreas comunes)?</p>',
+    options: [
+      { label: 'Sí, es importante', value: 'si', action: 'edificio_recreacion' },
+      { label: 'No lo necesito', value: 'no', action: 'edificio_recreacion' },
+      { label: 'Indiferente', value: 'indiferente', action: 'edificio_recreacion' },
+    ],
+  });
+};
+
+const handleEdificioRecreacion = (value: string) => {
+  preferencias.value.cerca_recreacion = value as 'si' | 'no' | 'indiferente';
+  preguntarSiguientePreguntaEdificio();
+};
+
+// Pregunta 5: Superficie mínima
+const preguntarEdificioSuperficie = () => {
+  addMessage({
+    sender: 'bot',
+    text: '<p class="font-semibold"><i class="pi pi-expand mr-1"></i> Características del Edificio (5/8)</p><p class="text-sm text-gray-600 mt-1">¿Cuál es la superficie mínima que necesitas?</p>',
+    options: [
+      { label: '30 m² o más', value: 30, action: 'edificio_superficie' },
+      { label: '50 m² o más', value: 50, action: 'edificio_superficie' },
+      { label: '70 m² o más', value: 70, action: 'edificio_superficie' },
+      { label: '100 m² o más', value: 100, action: 'edificio_superficie' },
+      { label: 'Sin preferencia', value: 0, action: 'edificio_superficie' },
+    ],
+  });
+};
+
+const handleEdificioSuperficie = (value: number) => {
+  preferencias.value.superficie_min = value > 0 ? value : undefined;
+  preguntarSiguientePreguntaEdificio();
+};
+
+// Pregunta 6: Baños mínimos
+const preguntarEdificioBanos = () => {
+  addMessage({
+    sender: 'bot',
+    text: '<p class="font-semibold"><i class="pi pi-slack mr-1"></i> Características del Edificio (6/8)</p><p class="text-sm text-gray-600 mt-1">¿Cuántos baños necesitas como mínimo?</p>',
+    options: [
+      { label: '1 baño', value: 1, action: 'edificio_banos' },
+      { label: '2 baños', value: 2, action: 'edificio_banos' },
+      { label: '3 o más baños', value: 3, action: 'edificio_banos' },
+    ],
+  });
+};
+
+const handleEdificioBanos = (value: number) => {
+  preferencias.value.banos_minimo = value;
+  preguntarSiguientePreguntaEdificio();
+};
+
+// Pregunta 7: Piso preferido
+const preguntarEdificioPiso = () => {
+  addMessage({
+    sender: 'bot',
+    text: `
+      <div>
+        <p class="font-semibold"><i class="pi pi-sort-alt mr-1"></i> Características del Edificio (7/8)</p>
+        <p class="text-sm text-gray-600 mt-1">¿Qué piso prefieres?</p>
+        <div class="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded">
+          <p><i class="pi pi-info-circle mr-1"></i> <strong>Consideraciones:</strong></p>
+          <p>• <strong>Bajo (1-3):</strong> Fácil acceso, ideal si hay niños o adultos mayores</p>
+          <p>• <strong>Medio (4-10):</strong> Balance entre acceso y vista</p>
+          <p>• <strong>Alto (11+):</strong> Mejor vista, más privacidad, menos ruido</p>
+        </div>
+      </div>
+    `,
+    options: [
+      { label: 'Piso bajo (1-3)', value: 'bajo', action: 'edificio_piso' },
+      { label: 'Piso medio (4-10)', value: 'medio', action: 'edificio_piso' },
+      { label: 'Piso alto (11+)', value: 'alto', action: 'edificio_piso' },
+      { label: 'Indiferente', value: 'indiferente', action: 'edificio_piso' },
+    ],
+  });
+};
+
+const handleEdificioPiso = (value: string) => {
+  preferencias.value.piso_preferido = value as 'bajo' | 'medio' | 'alto' | 'indiferente';
+  preguntarSiguientePreguntaEdificio();
+};
+
+// Pregunta 8: Gastos comunes máximos
+const preguntarEdificioGastos = () => {
+  addMessage({
+    sender: 'bot',
+    text: '<p class="font-semibold"><i class="pi pi-wallet mr-1"></i> Características del Edificio (8/8)</p><p class="text-sm text-gray-600 mt-1">¿Cuál es el máximo de gastos comunes mensuales que estás dispuesto a pagar?</p>',
+    options: [
+      { label: 'Hasta $50.000', value: 50000, action: 'edificio_gastos' },
+      { label: 'Hasta $100.000', value: 100000, action: 'edificio_gastos' },
+      { label: 'Hasta $150.000', value: 150000, action: 'edificio_gastos' },
+      { label: 'Hasta $200.000', value: 200000, action: 'edificio_gastos' },
+      { label: 'Sin límite', value: 0, action: 'edificio_gastos' },
+    ],
+  });
+};
+
+const handleEdificioGastos = (value: number) => {
+  preferencias.value.gastos_comunes_max = value > 0 ? value : undefined;
+  preguntarSiguientePreguntaEdificio();
 };
 
 const preguntarAmbiente = () => {
@@ -781,7 +1038,7 @@ const finalizarConversacion = () => {
     
     // Construir resumen dinámico
     const resumenItems: string[] = [
-      `<p><CurrencyDollarIcon class="inline-block mr-1" /> Presupuesto: $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
+      `<p><CurrencyDollarIcon class="inline-block mr-1" /> Presupuesto: $${(preferencias.value.precio_min || 0).toLocaleString('es-CL')} - $${(preferencias.value.precio_max || 0).toLocaleString('es-CL')} CLP</p>`,
       `<p><HomeIcon class="inline-block mr-1" /> Dormitorios: ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
       `<p><HomeIcon class="inline-block mr-1" /> Tipo: ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
       `<p><MapPinIcon class="inline-block mr-1" /> Zona: ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
@@ -806,7 +1063,16 @@ const finalizarConversacion = () => {
   resumenItems.push(`<p><TreeIcon class="inline-block mr-1" /> Áreas Verdes: Prioridad ${preferencias.value.prioridad_areas_verdes}/10</p>`);
       }
       if (temasSeleccionados.value.includes('edificio')) {
-  resumenItems.push(`<p><CarIcon class="inline-block mr-1" /> Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
+        const edificioItems: string[] = [];
+        edificioItems.push(`Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}`);
+        if (preferencias.value.orientacion) edificioItems.push(`Orientación: ${preferencias.value.orientacion}`);
+        if (preferencias.value.tiene_patio !== 'indiferente') edificioItems.push(`Patio: ${preferencias.value.tiene_patio === 'si' ? 'Sí' : 'No'}`);
+        if (preferencias.value.cerca_recreacion !== 'indiferente') edificioItems.push(`Recreación: ${preferencias.value.cerca_recreacion === 'si' ? 'Sí' : 'No'}`);
+        if (preferencias.value.superficie_min) edificioItems.push(`Superficie mín: ${preferencias.value.superficie_min} m²`);
+        if (preferencias.value.banos_minimo && preferencias.value.banos_minimo > 1) edificioItems.push(`Baños mín: ${preferencias.value.banos_minimo}`);
+        if (preferencias.value.piso_preferido !== 'indiferente') edificioItems.push(`Piso: ${preferencias.value.piso_preferido}`);
+        if (preferencias.value.gastos_comunes_max) edificioItems.push(`Gastos máx: $${preferencias.value.gastos_comunes_max.toLocaleString()}`);
+  resumenItems.push(`<p><CarIcon class="inline-block mr-1" /> Edificio: ${edificioItems.join(' | ')}</p>`);
       }
       if (temasSeleccionados.value.includes('ambiente')) {
   resumenItems.push(`<p><BellIcon class="inline-block mr-1" /> Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);
@@ -930,16 +1196,36 @@ const finalizarConversacion = () => {
     
     // Agregar detalles de edificio si fue seleccionado
     if (temasSeleccionados.value.includes('edificio')) {
+      // Calcular importancia de piso alto basado en preferencia
+      let importanciaPisoAlto = 0;
+      if (preferencias.value.piso_preferido === 'alto') importanciaPisoAlto = 8;
+      else if (preferencias.value.piso_preferido === 'medio') importanciaPisoAlto = 4;
+      else if (preferencias.value.piso_preferido === 'bajo') importanciaPisoAlto = -5;
+      
       preferenciasML.edificio = {
-        importancia_gastos_bajos: 0,
-        importancia_piso_alto: 0,
-        importancia_orientacion: 0,
-        necesita_terraza: false,
-        importancia_terraza: 0,
+        gastos_comunes_max: preferencias.value.gastos_comunes_max,
+        importancia_gastos_bajos: preferencias.value.gastos_comunes_max ? 6 : 0,
+        importancia_piso_alto: importanciaPisoAlto,
+        piso_minimo: preferencias.value.piso_preferido === 'alto' ? 11 : (preferencias.value.piso_preferido === 'medio' ? 4 : undefined),
+        piso_maximo: preferencias.value.piso_preferido === 'bajo' ? 3 : undefined,
+        importancia_orientacion: preferencias.value.orientacion ? 6 : 0,
+        orientaciones_preferidas: preferencias.value.orientacion ? [preferencias.value.orientacion] : undefined,
+        necesita_terraza: preferencias.value.tiene_patio === 'si',
+        importancia_terraza: preferencias.value.tiene_patio === 'si' ? 7 : (preferencias.value.tiene_patio === 'no' ? -3 : 0),
         tipo_preferido: preferencias.value.tipo_inmueble_preferido,
         importancia_tipo: preferencias.value.tipo_inmueble_preferido ? 5 : 0,
         importancia_privacidad: 0,
       };
+      
+      // Agregar superficie mínima si fue especificada
+      if (preferencias.value.superficie_min) {
+        preferenciasML.superficie_min = preferencias.value.superficie_min;
+      }
+      
+      // Agregar baños mínimos si fue especificado
+      if (preferencias.value.banos_minimo) {
+        preferenciasML.banos_min = preferencias.value.banos_minimo;
+      }
     }
     
     // Emitir preferencias completas en formato ML
@@ -1050,16 +1336,36 @@ const ejecutarBusqueda = () => {
     
     // Agregar detalles de edificio si fue seleccionado
     if (temasSeleccionados.value.includes('edificio')) {
+      // Calcular importancia de piso alto basado en preferencia
+      let importanciaPisoAlto = 0;
+      if (preferencias.value.piso_preferido === 'alto') importanciaPisoAlto = 8;
+      else if (preferencias.value.piso_preferido === 'medio') importanciaPisoAlto = 4;
+      else if (preferencias.value.piso_preferido === 'bajo') importanciaPisoAlto = -5;
+      
       preferenciasML.edificio = {
-        importancia_gastos_bajos: 0,
-        importancia_piso_alto: 0,
-        importancia_orientacion: 0,
-        necesita_terraza: false,
-        importancia_terraza: 0,
+        gastos_comunes_max: preferencias.value.gastos_comunes_max,
+        importancia_gastos_bajos: preferencias.value.gastos_comunes_max ? 6 : 0,
+        importancia_piso_alto: importanciaPisoAlto,
+        piso_minimo: preferencias.value.piso_preferido === 'alto' ? 11 : (preferencias.value.piso_preferido === 'medio' ? 4 : undefined),
+        piso_maximo: preferencias.value.piso_preferido === 'bajo' ? 3 : undefined,
+        importancia_orientacion: preferencias.value.orientacion ? 6 : 0,
+        orientaciones_preferidas: preferencias.value.orientacion ? [preferencias.value.orientacion] : undefined,
+        necesita_terraza: preferencias.value.tiene_patio === 'si',
+        importancia_terraza: preferencias.value.tiene_patio === 'si' ? 7 : (preferencias.value.tiene_patio === 'no' ? -3 : 0),
         tipo_preferido: preferencias.value.tipo_inmueble_preferido,
         importancia_tipo: preferencias.value.tipo_inmueble_preferido ? 5 : 0,
         importancia_privacidad: 0,
       };
+      
+      // Agregar superficie mínima si fue especificada
+      if (preferencias.value.superficie_min) {
+        preferenciasML.superficie_min = preferencias.value.superficie_min;
+      }
+      
+      // Agregar baños mínimos si fue especificado
+      if (preferencias.value.banos_minimo) {
+        preferenciasML.banos_min = preferencias.value.banos_minimo;
+      }
     }
     
     // Emitir evento para iniciar búsqueda real
@@ -1086,17 +1392,26 @@ const resetChat = () => {
     evitar_colegios: false,
     evitar_hospitales: false,
     evitar_metro: false,
+    // Resetear campos de características del edificio
+    orientacion: undefined,
+    tiene_patio: 'indiferente',
+    cerca_recreacion: 'indiferente',
+    superficie_min: undefined,
+    banos_minimo: 1,
+    piso_preferido: 'indiferente',
+    gastos_comunes_max: undefined,
   };
   temasSeleccionados.value = [];
   tempMultiSelectValues.value = [];
   indiceTemaActual = 0;
+  indiceEdificioActual = 0;
   searchStarted.value = false;
   iniciarConversacion();
 };
 
 const verResumen = () => {
   const resumenItems: string[] = [
-    `<p><i class="pi pi-money-bill mr-1"></i> <strong>Presupuesto:</strong> $${(preferencias.value.precio_min || 0).toLocaleString()} - $${(preferencias.value.precio_max || 0).toLocaleString()}</p>`,
+    `<p><i class="pi pi-money-bill mr-1"></i> <strong>Presupuesto:</strong> $${(preferencias.value.precio_min || 0).toLocaleString('es-CL')} - $${(preferencias.value.precio_max || 0).toLocaleString('es-CL')} CLP</p>`,
     `<p><strong>Dormitorios:</strong> ${preferencias.value.dormitorios_min || 'Sin preferencia'}</p>`,
     `<p><i class="pi pi-home mr-1"></i> <strong>Tipo:</strong> ${preferencias.value.tipo_inmueble_preferido || 'Cualquiera'}</p>`,
     `<p><i class="pi pi-map-marker mr-1"></i> <strong>Comunas:</strong> ${preferencias.value.comunas_preferidas?.join(', ') || 'Sin preferencia'}</p>`,
@@ -1121,7 +1436,16 @@ const verResumen = () => {
   resumenItems.push(`<p><i class="pi pi-tree mr-1"></i> Áreas Verdes: ${preferencias.value.prioridad_areas_verdes}/10</p>`);
     }
     if (temasSeleccionados.value.includes('edificio')) {
-  resumenItems.push(`<p><i class="pi pi-car mr-1"></i> Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}</p>`);
+        const edificioItems: string[] = [];
+        edificioItems.push(`Estacionamiento: ${preferencias.value.requiere_estacionamiento ? 'Requerido' : 'No requerido'}`);
+        if (preferencias.value.orientacion) edificioItems.push(`Orientación: ${preferencias.value.orientacion}`);
+        if (preferencias.value.tiene_patio !== 'indiferente') edificioItems.push(`Patio: ${preferencias.value.tiene_patio === 'si' ? 'Sí' : 'No'}`);
+        if (preferencias.value.cerca_recreacion !== 'indiferente') edificioItems.push(`Recreación: ${preferencias.value.cerca_recreacion === 'si' ? 'Sí' : 'No'}`);
+        if (preferencias.value.superficie_min) edificioItems.push(`Superficie mín: ${preferencias.value.superficie_min} m²`);
+        if (preferencias.value.banos_minimo && preferencias.value.banos_minimo > 1) edificioItems.push(`Baños mín: ${preferencias.value.banos_minimo}`);
+        if (preferencias.value.piso_preferido !== 'indiferente') edificioItems.push(`Piso: ${preferencias.value.piso_preferido}`);
+        if (preferencias.value.gastos_comunes_max) edificioItems.push(`Gastos máx: $${preferencias.value.gastos_comunes_max.toLocaleString()}`);
+  resumenItems.push(`<p><i class="pi pi-car mr-1"></i> Edificio: ${edificioItems.join(' | ')}</p>`);
     }
     if (temasSeleccionados.value.includes('ambiente')) {
   resumenItems.push(`<p><i class="pi pi-bell mr-1"></i> Ruido: ${preferencias.value.ruido_ambiente || 'Normal'}</p>`);

@@ -357,15 +357,26 @@ const mostrarToast = (mensaje: string) => {
 }
 
 // Funciones de formato y estilo
+const VALOR_UF_CLP = 37500;
+
 const formatearPrecio = (precioCLP: number): string => {
-  // Los precios ya vienen normalizados en CLP desde el backend
+  // Convertir CLP a UF
+  const precioUF = precioCLP / VALOR_UF_CLP;
+  
+  // Formatear UF
+  const ufFormateado = precioUF.toLocaleString('es-CL', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  // Formatear CLP
   const clpFormateado = new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     minimumFractionDigits: 0,
   }).format(precioCLP);
   
-  return clpFormateado;
+  return `${ufFormateado} UF (${clpFormateado})`;
 }
 
 const getScoreColor = (score: number): string => {
