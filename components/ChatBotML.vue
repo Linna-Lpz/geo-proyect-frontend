@@ -246,6 +246,14 @@ const emit = defineEmits<{
   (e: 'preferenciasCompletas', preferencias: PreferenciasDetalladasML): void;
 }>();
 
+// Constante para conversión CLP a UF
+const VALOR_UF_CLP = 37500;
+
+// Función para convertir CLP a UF
+const clpToUF = (clp: number): number => {
+  return clp / VALOR_UF_CLP;
+};
+
 const messages = ref<ChatMessage[]>([]);
 const isLoading = ref(false);
 const messagesContainer = ref<HTMLElement>();
@@ -780,30 +788,58 @@ const handlePrioridadAreasVerdes = (value: number) => {
 // PREGUNTAS DE CARACTERÍSTICAS DEL EDIFICIO (SUB-FLUJO)
 // ============================================================================
 
-const preguntasEdificio = [
-  'estacionamiento',
-  'orientacion',
-  'patio',
-  'recreacion',
-  'superficie',
-  'banos',
-  'piso',
-  'gastos'
-];
+// Función para obtener las preguntas según el tipo de propiedad
+const obtenerPreguntasEdificio = (): string[] => {
+  const tipoPropiedad = preferencias.value.tipo_inmueble_preferido;
+  
+  // Preguntas base (aplican a casa y departamento)
+  const preguntasBase = [
+    'estacionamiento',
+    'orientacion',
+    'patio',
+    'recreacion',
+    'superficie',
+    'banos'
+  ];
+  
+  // Si es departamento, agregar piso y gastos comunes
+  if (tipoPropiedad === 'Departamento') {
+    return [...preguntasBase, 'piso', 'gastos'];
+  }
+  
+  // Si es casa o cualquiera, solo preguntas base
+  return preguntasBase;
+};
+
+// Función para obtener el título según el tipo de propiedad
+const obtenerTituloEdificio = (): string => {
+  const tipoPropiedad = preferencias.value.tipo_inmueble_preferido;
+  
+  if (tipoPropiedad === 'Departamento') {
+    return 'Características del Departamento';
+  } else if (tipoPropiedad === 'Casa') {
+    return 'Características de la Casa';
+  }
+  return 'Características del Edificio';
+};
+
+// Variable para almacenar las preguntas dinámicas
+let preguntasEdificioActuales: string[] = [];
 
 const preguntarEdificio = () => {
   indiceEdificioActual = 0;
+  preguntasEdificioActuales = obtenerPreguntasEdificio();
   preguntarSiguientePreguntaEdificio();
 };
 
 const preguntarSiguientePreguntaEdificio = () => {
-  if (indiceEdificioActual >= preguntasEdificio.length) {
+  if (indiceEdificioActual >= preguntasEdificioActuales.length) {
     // Terminó todas las preguntas de edificio
     preguntarSiguienteTema();
     return;
   }
   
-  const pregunta = preguntasEdificio[indiceEdificioActual];
+  const pregunta = preguntasEdificioActuales[indiceEdificioActual];
   indiceEdificioActual++;
   
   switch (pregunta) {
@@ -838,9 +874,11 @@ const preguntarSiguientePreguntaEdificio = () => {
 
 // Pregunta 1: Estacionamiento
 const preguntarEdificioEstacionamiento = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-building mr-1"></i> Características del Edificio (1/8)</p><p class="text-sm text-gray-600 mt-1">¿Necesitas estacionamiento?</p>',
+    text: `<p class="font-semibold"><i class="pi pi-building mr-1"></i> ${titulo} (1/${totalPreguntas})</p><p class="text-sm text-gray-600 mt-1">¿Necesitas estacionamiento?</p>`,
     options: [
       { label: 'Sí, es indispensable', value: true, action: 'edificio_estacionamiento' },
       { label: 'No es necesario', value: false, action: 'edificio_estacionamiento' },
@@ -855,11 +893,13 @@ const handleEdificioEstacionamiento = (value: boolean) => {
 
 // Pregunta 2: Orientación
 const preguntarEdificioOrientacion = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
     text: `
       <div>
-        <p class="font-semibold"><i class="pi pi-compass mr-1"></i> Características del Edificio (2/8)</p>
+        <p class="font-semibold"><i class="pi pi-compass mr-1"></i> ${titulo} (2/${totalPreguntas})</p>
         <p class="text-sm text-gray-600 mt-1">¿Qué orientación prefieres para la propiedad?</p>
         <div class="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded">
           <p><i class="pi pi-info-circle mr-1"></i> <strong>Orientación:</strong></p>
@@ -887,9 +927,11 @@ const handleEdificioOrientacion = (value: string) => {
 
 // Pregunta 3: Patio
 const preguntarEdificioPatio = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-sun mr-1"></i> Características del Edificio (3/8)</p><p class="text-sm text-gray-600 mt-1">¿Te gustaría que tenga patio o terraza?</p>',
+    text: `<p class="font-semibold"><i class="pi pi-sun mr-1"></i> ${titulo} (3/${totalPreguntas})</p><p class="text-sm text-gray-600 mt-1">¿Te gustaría que tenga patio o terraza?</p>`,
     options: [
       { label: 'Sí, es importante', value: 'si', action: 'edificio_patio' },
       { label: 'No lo necesito', value: 'no', action: 'edificio_patio' },
@@ -905,9 +947,11 @@ const handleEdificioPatio = (value: string) => {
 
 // Pregunta 4: Zonas de recreación
 const preguntarEdificioRecreacion = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-heart mr-1"></i> Características del Edificio (4/8)</p><p class="text-sm text-gray-600 mt-1">¿Te gustaría estar cerca de zonas de recreación (gimnasio, piscina, áreas comunes)?</p>',
+    text: `<p class="font-semibold"><i class="pi pi-heart mr-1"></i> ${titulo} (4/${totalPreguntas})</p><p class="text-sm text-gray-600 mt-1">¿Te gustaría estar cerca de zonas de recreación (gimnasio, piscina, áreas comunes)?</p>`,
     options: [
       { label: 'Sí, es importante', value: 'si', action: 'edificio_recreacion' },
       { label: 'No lo necesito', value: 'no', action: 'edificio_recreacion' },
@@ -923,9 +967,11 @@ const handleEdificioRecreacion = (value: string) => {
 
 // Pregunta 5: Superficie mínima
 const preguntarEdificioSuperficie = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-expand mr-1"></i> Características del Edificio (5/8)</p><p class="text-sm text-gray-600 mt-1">¿Cuál es la superficie mínima que necesitas?</p>',
+    text: `<p class="font-semibold"><i class="pi pi-expand mr-1"></i> ${titulo} (5/${totalPreguntas})</p><p class="text-sm text-gray-600 mt-1">¿Cuál es la superficie mínima que necesitas?</p>`,
     options: [
       { label: '30 m² o más', value: 30, action: 'edificio_superficie' },
       { label: '50 m² o más', value: 50, action: 'edificio_superficie' },
@@ -943,9 +989,11 @@ const handleEdificioSuperficie = (value: number) => {
 
 // Pregunta 6: Baños mínimos
 const preguntarEdificioBanos = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-slack mr-1"></i> Características del Edificio (6/8)</p><p class="text-sm text-gray-600 mt-1">¿Cuántos baños necesitas como mínimo?</p>',
+    text: `<p class="font-semibold"><i class="pi pi-slack mr-1"></i> ${titulo} (6/${totalPreguntas})</p><p class="text-sm text-gray-600 mt-1">¿Cuántos baños necesitas como mínimo?</p>`,
     options: [
       { label: '1 baño', value: 1, action: 'edificio_banos' },
       { label: '2 baños', value: 2, action: 'edificio_banos' },
@@ -959,13 +1007,15 @@ const handleEdificioBanos = (value: number) => {
   preguntarSiguientePreguntaEdificio();
 };
 
-// Pregunta 7: Piso preferido
+// Pregunta 7: Piso preferido (solo para departamentos)
 const preguntarEdificioPiso = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
     text: `
       <div>
-        <p class="font-semibold"><i class="pi pi-sort-alt mr-1"></i> Características del Edificio (7/8)</p>
+        <p class="font-semibold"><i class="pi pi-sort-alt mr-1"></i> ${titulo} (7/${totalPreguntas})</p>
         <p class="text-sm text-gray-600 mt-1">¿Qué piso prefieres?</p>
         <div class="mt-2 text-xs text-gray-500 bg-blue-50 p-2 rounded">
           <p><i class="pi pi-info-circle mr-1"></i> <strong>Consideraciones:</strong></p>
@@ -989,11 +1039,13 @@ const handleEdificioPiso = (value: string) => {
   preguntarSiguientePreguntaEdificio();
 };
 
-// Pregunta 8: Gastos comunes máximos
+// Pregunta 8: Gastos comunes máximos (solo para departamentos)
 const preguntarEdificioGastos = () => {
+  const titulo = obtenerTituloEdificio();
+  const totalPreguntas = preguntasEdificioActuales.length;
   addMessage({
     sender: 'bot',
-    text: '<p class="font-semibold"><i class="pi pi-wallet mr-1"></i> Características del Edificio (8/8)</p><p class="text-sm text-gray-600 mt-1">¿Cuál es el máximo de gastos comunes mensuales que estás dispuesto a pagar?</p>',
+    text: `<p class="font-semibold"><i class="pi pi-wallet mr-1"></i> ${titulo} (8/${totalPreguntas})</p><p class="text-sm text-gray-600 mt-1">¿Cuál es el máximo de gastos comunes mensuales que estás dispuesto a pagar?</p>`,
     options: [
       { label: 'Hasta $50.000', value: 50000, action: 'edificio_gastos' },
       { label: 'Hasta $100.000', value: 100000, action: 'edificio_gastos' },
@@ -1123,9 +1175,9 @@ const finalizarConversacion = () => {
     
     // Normalizar pesos para que sumen 1.0
     const preferenciasML: PreferenciasDetalladasML = {
-      // Hard constraints
-      precio_min: preferencias.value.precio_min,
-      precio_max: preferencias.value.precio_max,
+      // Hard constraints - Convertir precios de CLP a UF para el backend
+      precio_min: preferencias.value.precio_min ? clpToUF(preferencias.value.precio_min) : undefined,
+      precio_max: preferencias.value.precio_max ? clpToUF(preferencias.value.precio_max) : undefined,
       dormitorios_min: preferencias.value.dormitorios_min,
       banos_min: preferencias.value.banos_min || 1,
       
@@ -1263,9 +1315,9 @@ const ejecutarBusqueda = () => {
     
     // Normalizar pesos para que sumen 1.0
     const preferenciasML: PreferenciasDetalladasML = {
-      // Hard constraints
-      precio_min: preferencias.value.precio_min,
-      precio_max: preferencias.value.precio_max,
+      // Hard constraints - Convertir precios de CLP a UF para el backend
+      precio_min: preferencias.value.precio_min ? clpToUF(preferencias.value.precio_min) : undefined,
+      precio_max: preferencias.value.precio_max ? clpToUF(preferencias.value.precio_max) : undefined,
       dormitorios_min: preferencias.value.dormitorios_min,
       banos_min: preferencias.value.banos_min || 1,
       

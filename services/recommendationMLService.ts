@@ -144,6 +144,13 @@ export interface PropiedadRecomendadaML {
   latitud: number
   longitud: number
   
+  // Características adicionales del edificio/departamento
+  gastos_comunes?: number  // Gastos comunes en CLP
+  orientacion?: string  // Norte, Sur, Oriente, Poniente
+  numero_piso?: number  // Número de piso de la unidad
+  cantidad_pisos?: number  // Total de pisos del edificio
+  bodegas?: number  // Número de bodegas
+  
   // Scoring
   score_total: number
   score_confianza: number

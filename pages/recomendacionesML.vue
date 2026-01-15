@@ -123,10 +123,10 @@
                 <!-- Detalles adicionales -->
                 <div>
                   <button
-                    class="text-sm hover:underline flex justify-end"
-                    @click="verMasDetalles"
+                    class="text-sm text-blue-600 hover:underline flex justify-end"
+                    @click="mostrarModalDetalles = true"
                   >
-                    Ver más detalles
+                    <i class="pi pi-info-circle mr-1"></i> Ver más detalles
                   </button>
                 </div>
               </div>
@@ -181,6 +181,163 @@
         {{ toastMessage }}
       </div>
     </Teleport>
+    
+    <!-- Modal de detalles de propiedad -->
+    <Teleport to="body">
+      <div
+        v-if="mostrarModalDetalles && propiedadSeleccionada"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        @click.self="mostrarModalDetalles = false"
+      >
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-gray-700 to-gray-800 text-white px-6 py-4 rounded-t-xl flex justify-between items-center">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+              <i :class="propiedadSeleccionada.tipo_propiedad?.toLowerCase().includes('departamento') ? 'pi pi-building' : 'pi pi-home'"></i>
+              Detalles de la Propiedad
+            </h3>
+            <button @click="mostrarModalDetalles = false" class="text-white/80 hover:text-white">
+              <XMarkIcon class="h-6 w-6" />
+            </button>
+          </div>
+          
+          <!-- Content -->
+          <div class="p-6 space-y-6">
+            <!-- Info básica -->
+            <div class="border-b pb-4">
+              <h4 class="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <i class="pi pi-map-marker text-gray-500"></i> Ubicación
+              </h4>
+              <p class="text-gray-800 font-medium">{{ propiedadSeleccionada.direccion }}</p>
+              <p class="text-gray-500 text-sm">{{ propiedadSeleccionada.comuna }}</p>
+            </div>
+            
+            <!-- Precio -->
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 class="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <i class="pi pi-dollar text-gray-500"></i> Precio de Venta
+              </h4>
+              <p class="text-2xl font-bold text-gray-800">{{ formatearPrecio(propiedadSeleccionada.precio) }}</p>
+            </div>
+            
+            <!-- Características principales -->
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <i class="pi pi-list text-gray-500"></i> Características Principales
+              </h4>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-home text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Dormitorios</p>
+                  <p class="font-bold text-gray-800 text-lg">{{ propiedadSeleccionada.dormitorios }}</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-stop text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Baños</p>
+                  <p class="font-bold text-gray-800 text-lg">{{ propiedadSeleccionada.banos }}</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-arrows-h text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Superficie</p>
+                  <p class="font-bold text-gray-800 text-lg">{{ propiedadSeleccionada.superficie_util }} m²</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-car text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Estacionamientos</p>
+                  <p class="font-bold text-gray-800 text-lg">{{ propiedadSeleccionada.estacionamientos || 0 }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Características del edificio/departamento -->
+            <div v-if="propiedadSeleccionada.gastos_comunes || propiedadSeleccionada.orientacion || propiedadSeleccionada.numero_piso || propiedadSeleccionada.bodegas">
+              <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <i class="pi pi-building text-gray-500"></i> Características del Edificio
+              </h4>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div v-if="propiedadSeleccionada.gastos_comunes" class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-wallet text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Gastos Comunes</p>
+                  <p class="font-bold text-gray-800">${{ propiedadSeleccionada.gastos_comunes.toLocaleString('es-CL') }}</p>
+                </div>
+                <div v-if="propiedadSeleccionada.orientacion" class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-compass text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Orientación</p>
+                  <p class="font-bold text-gray-800">{{ propiedadSeleccionada.orientacion }}</p>
+                </div>
+                <div v-if="propiedadSeleccionada.numero_piso" class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-building text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Piso</p>
+                  <p class="font-bold text-gray-800">{{ propiedadSeleccionada.numero_piso }} <span v-if="propiedadSeleccionada.cantidad_pisos" class="text-sm text-gray-500 font-normal">de {{ propiedadSeleccionada.cantidad_pisos }}</span></p>
+                </div>
+                <div v-if="propiedadSeleccionada.bodegas" class="border border-gray-200 rounded-lg p-3 text-center">
+                  <i class="pi pi-box text-gray-500 text-lg mb-1"></i>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide">Bodegas</p>
+                  <p class="font-bold text-gray-800 text-lg">{{ propiedadSeleccionada.bodegas }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Scores -->
+            <div v-if="propiedadSeleccionada.score_total" class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <i class="pi pi-chart-bar text-gray-500"></i> Puntuación
+              </h4>
+              <div class="flex items-center gap-6">
+                <div class="text-center">
+                  <p class="text-3xl font-bold" :class="getScoreColor(propiedadSeleccionada.score_total)">
+                    {{ propiedadSeleccionada.score_total.toFixed(1) }}
+                  </p>
+                  <p class="text-sm text-gray-500">Compatibilidad</p>
+                </div>
+                <div v-if="propiedadSeleccionada.satisfaccion_score" class="text-center border-l border-gray-300 pl-6">
+                  <p class="text-3xl font-bold" :class="getSatisfaccionColor(propiedadSeleccionada.satisfaccion_score)">
+                    {{ propiedadSeleccionada.satisfaccion_score.toFixed(1) }}
+                  </p>
+                  <p class="text-sm text-gray-500">Satisfacción ML</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Puntos fuertes y débiles -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div v-if="propiedadSeleccionada.puntos_fuertes?.length" class="border border-green-200 rounded-lg p-4 bg-green-50/50">
+                <h4 class="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                  <i class="pi pi-check-circle text-green-600"></i> Puntos Fuertes
+                </h4>
+                <ul class="space-y-2">
+                  <li v-for="(punto, idx) in propiedadSeleccionada.puntos_fuertes" :key="idx" class="text-sm text-gray-700 flex items-start gap-2">
+                    <span class="text-green-500 mt-0.5">•</span>
+                    <span>{{ punto }}</span>
+                  </li>
+                </ul>
+              </div>
+              <div v-if="propiedadSeleccionada.puntos_debiles?.length" class="border border-amber-200 rounded-lg p-4 bg-amber-50/50">
+                <h4 class="font-semibold text-amber-700 mb-3 flex items-center gap-2">
+                  <i class="pi pi-exclamation-triangle text-amber-600"></i> Puntos a Considerar
+                </h4>
+                <ul class="space-y-2">
+                  <li v-for="(punto, idx) in propiedadSeleccionada.puntos_debiles" :key="idx" class="text-sm text-gray-700 flex items-start gap-2">
+                    <span class="text-amber-500 mt-0.5">•</span>
+                    <span>{{ punto }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div class="px-6 py-4 bg-gray-100 rounded-b-xl flex justify-end gap-3 border-t">
+            <button
+              @click="mostrarModalDetalles = false"
+              class="px-5 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </div>
 </template>
@@ -207,6 +364,7 @@ const buscandoPropiedades = ref(false)
 const propiedadSeleccionada = ref<PropiedadRecomendadaML | null>(null)
 const showToast = ref(false)
 const toastMessage = ref('')
+const mostrarModalDetalles = ref(false)
 
 // Computed: propiedades paginadas
 const recomendaciones = computed(() => {
